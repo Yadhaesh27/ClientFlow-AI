@@ -1,0 +1,31 @@
+# Dependencies
+node_modules/
+frontend/node_modules/
+
+# Production Builds
+dist/
+frontend/dist/
+build/
+
+# Python Virtual Envs & Cache
+__pycache__/
+*.pyc
+.venv/
+venv/
+backend/__pycache__/
+backend/venv/
+
+# Environment Variables & Secret Files
+.env
+.env.local
+backend/.env
+
+# Local SQLite Database
+*.db
+backend/clientflow.db
+
+# OS & IDE Files
+.DS_Store
+.vscode/
+.idea/
+*.log
