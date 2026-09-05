@@ -18,12 +18,13 @@ For instant execution on Windows without manually typing commands:
 
 ## 📸 Live Application Screenshots
 
-| Agency Overview Dashboard | Project Workspaces |
+| Client Side Portal Interface | Agency Overview Dashboard |
 | :---: | :---: |
-| ![Dashboard Live](docs/screenshots/dashboard_live.png) | ![Projects Live](docs/screenshots/projects_live.png) |
+| ![Client Side Interface](docs/screenshots/client_side_interface.png) | ![Dashboard Live](docs/screenshots/dashboard_live.png) |
 
-### 📜 Executive PDF Reports & Audit Documents
-![Executive Reports Live](docs/screenshots/executive_reports_live.png)
+| Project Workspaces | Executive PDF Reports & Audit Documents |
+| :---: | :---: |
+| ![Projects Live](docs/screenshots/projects_live.png) | ![Executive Reports Live](docs/screenshots/executive_reports_live.png) |
 
 ---
 
