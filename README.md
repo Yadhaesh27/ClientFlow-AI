@@ -4,18 +4,6 @@ ClientFlow AI is a modern, high-speed multi-tenant client collaboration portal a
 
 ---
 
-## 💻 1-Click Launchers (Windows)
-
-For instant execution on Windows without manually typing commands:
-
-- **[`START_CLIENTFLOW.bat`](file:///c:/Users/YADHAESH/Desktop/GENESIS%20HACKTHON/START_CLIENTFLOW.bat)**:  
-  *1-Click Frontend Launcher* — Auto-installs dependencies, starts Vite dev server, and opens `http://localhost:5173` in your default browser.
-  
-- **[`START_FULLSTACK.bat`](file:///c:/Users/YADHAESH/Desktop/GENESIS%20HACKTHON/START_FULLSTACK.bat)**:  
-  *1-Click Full-Stack Launcher* — Seeds SQLite database, starts Python FastAPI backend on port 8000, starts frontend dev server, and opens browser.
-
----
-
 ## 📸 Live Application Screenshots
 
 | Client Side Portal Interface | Agency Overview Dashboard |

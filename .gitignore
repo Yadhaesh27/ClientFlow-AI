@@ -29,3 +29,4 @@ backend/clientflow.db
 .vscode/
 .idea/
 *.log
+*.bat
