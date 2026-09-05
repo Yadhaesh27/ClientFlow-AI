@@ -16,6 +16,17 @@ For instant execution on Windows without manually typing commands:
 
 ---
 
+## 📸 Live Application Screenshots
+
+| Agency Overview Dashboard | Project Workspaces |
+| :---: | :---: |
+| ![Dashboard Live](docs/screenshots/dashboard_live.png) | ![Projects Live](docs/screenshots/projects_live.png) |
+
+### 📜 Executive PDF Reports & Audit Documents
+![Executive Reports Live](docs/screenshots/executive_reports_live.png)
+
+---
+
 ## 🔑 Pre-Seeded Demo Accounts & Credentials
 
 | Role | Email | Password | Primary Workspace Capabilities |
