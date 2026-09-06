@@ -12,8 +12,29 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 4000,
+  timeout: 600, // Reduced from 4000 to 600ms for ultra-fast response & instant offline fallback
 });
+
+// Fast Offline Circuit Breaker: Cache offline status to avoid repeated 1-4s network timeouts
+let isBackendOffline = false;
+let lastOfflineCheck = 0;
+
+const tryApiCall = async <T>(apiCall: () => Promise<T>): Promise<T | null> => {
+  const now = Date.now();
+  // If backend was marked offline within the last 15 seconds, skip network call immediately (0ms latency)
+  if (isBackendOffline && now - lastOfflineCheck < 15000) {
+    return null;
+  }
+  try {
+    const res = await apiCall();
+    isBackendOffline = false;
+    return res;
+  } catch (err) {
+    isBackendOffline = true;
+    lastOfflineCheck = now;
+    return null;
+  }
+};
 
 // Attach JWT token to requests if present
 api.interceptors.request.use((config) => {
@@ -409,280 +430,297 @@ const setLocalData = <T>(key: string, data: T) => {
 // API Services with Intelligent Backend-to-Dynamic-Fallback Layer
 export const authApi = {
   login: async (email: string, password: string) => {
-    try {
+    const data = await tryApiCall(async () => {
       const res = await api.post('/api/auth/login', { email, password });
       return res.data;
-    } catch (err) {
-      console.warn('Backend server offline or unreachable. Using dynamic login session fallback.');
-      const user = DEMO_USERS[email.toLowerCase()] || {
-        id: `usr_${Date.now()}`,
-        name: email.split('@')[0],
-        email: email,
-        role: 'ADMIN',
-        organization_id: 'org_custom',
-        created_at: new Date().toISOString(),
-      };
-      const token = `dynamic_token_${user.id}_${Date.now()}`;
-      localStorage.setItem('clientflow_current_user', JSON.stringify(user));
-      return { access_token: token, token_type: 'bearer', user };
-    }
+    });
+    if (data) return data;
+
+    console.warn('Backend server offline or unreachable. Using dynamic login session fallback.');
+    const user = DEMO_USERS[email.toLowerCase()] || {
+      id: `usr_${Date.now()}`,
+      name: email.split('@')[0],
+      email: email,
+      role: 'ADMIN',
+      organization_id: 'org_custom',
+      created_at: new Date().toISOString(),
+    };
+    const token = `dynamic_token_${user.id}_${Date.now()}`;
+    localStorage.setItem('clientflow_current_user', JSON.stringify(user));
+    return { access_token: token, token_type: 'bearer', user };
   },
   register: async (name: string, email: string, password: string, organization_name: string, role = 'ADMIN') => {
-    try {
+    const data = await tryApiCall(async () => {
       const res = await api.post('/api/auth/register', { name, email, password, organization_name, role });
       return res.data;
-    } catch (err) {
-      const user: User = {
-        id: `usr_${Date.now()}`,
-        name,
-        email,
-        role: role as any,
-        organization_id: `org_${Date.now()}`,
-        created_at: new Date().toISOString(),
-      };
-      const token = `dynamic_token_${user.id}_${Date.now()}`;
-      localStorage.setItem('clientflow_current_user', JSON.stringify(user));
-      return { access_token: token, token_type: 'bearer', user };
-    }
+    });
+    if (data) return data;
+
+    const user: User = {
+      id: `usr_${Date.now()}`,
+      name,
+      email,
+      role: role as any,
+      organization_id: `org_${Date.now()}`,
+      created_at: new Date().toISOString(),
+    };
+    const token = `dynamic_token_${user.id}_${Date.now()}`;
+    localStorage.setItem('clientflow_current_user', JSON.stringify(user));
+    return { access_token: token, token_type: 'bearer', user };
   },
   getMe: async (): Promise<User> => {
-    try {
+    const data = await tryApiCall(async () => {
       const res = await api.get('/api/auth/me');
       return res.data;
-    } catch (err) {
-      const stored = localStorage.getItem('clientflow_current_user');
-      if (stored) return JSON.parse(stored);
-      return DEMO_USERS['admin@clientflow.demo'];
-    }
+    });
+    if (data) return data;
+
+    const stored = localStorage.getItem('clientflow_current_user');
+    if (stored) return JSON.parse(stored);
+    return DEMO_USERS['admin@clientflow.demo'];
   },
   getOrgUsers: async (): Promise<User[]> => {
-    try {
+    const data = await tryApiCall(async () => {
       const res = await api.get('/api/auth/users');
       return res.data;
-    } catch (err) {
-      return Object.values(DEMO_USERS);
-    }
+    });
+    if (data) return data;
+
+    return Object.values(DEMO_USERS);
   },
 };
 
 export const projectsApi = {
   list: async (): Promise<Project[]> => {
-    try {
+    const data = await tryApiCall(async () => {
       const res = await api.get('/api/projects');
       return res.data;
-    } catch (err) {
-      const stored = getLocalData<Project[]>('clientflow_projects', INITIAL_PROJECTS);
-      if (stored.length > INITIAL_PROJECTS.length) {
-        setLocalData('clientflow_projects', INITIAL_PROJECTS);
-        return INITIAL_PROJECTS;
-      }
-      return stored;
+    });
+    if (data) return data;
+
+    const stored = getLocalData<Project[]>('clientflow_projects', INITIAL_PROJECTS);
+    if (stored.length > INITIAL_PROJECTS.length) {
+      setLocalData('clientflow_projects', INITIAL_PROJECTS);
+      return INITIAL_PROJECTS;
     }
+    return stored;
   },
   create: async (data: Partial<Project> & { assigned_member_ids?: string[] }): Promise<Project> => {
-    try {
+    const resData = await tryApiCall(async () => {
       const res = await api.post('/api/projects', data);
       return res.data;
-    } catch (err) {
-      const current = getLocalData('clientflow_projects', INITIAL_PROJECTS);
-      const newProj: Project = {
-        id: `proj_${Date.now()}`,
-        name: data.name || 'New Project',
-        description: data.description || '',
-        organization_id: 'org_novaworks',
-        status: 'ACTIVE',
-        progress: 0,
-        health_score: 90,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-      const updated = [newProj, ...current];
-      setLocalData('clientflow_projects', updated);
-      return newProj;
-    }
+    });
+    if (resData) return resData;
+
+    const current = getLocalData('clientflow_projects', INITIAL_PROJECTS);
+    const newProj: Project = {
+      id: `proj_${Date.now()}`,
+      name: data.name || 'New Project',
+      description: data.description || '',
+      organization_id: 'org_novaworks',
+      status: 'ACTIVE',
+      progress: 0,
+      health_score: 90,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+    const updated = [newProj, ...current];
+    setLocalData('clientflow_projects', updated);
+    return newProj;
   },
   get: async (id: string): Promise<Project> => {
-    try {
+    const data = await tryApiCall(async () => {
       const res = await api.get(`/api/projects/${id}`);
       return res.data;
-    } catch (err) {
-      const list = getLocalData('clientflow_projects', INITIAL_PROJECTS);
-      return list.find((p) => p.id === id) || list[0];
-    }
+    });
+    if (data) return data;
+
+    const list = getLocalData('clientflow_projects', INITIAL_PROJECTS);
+    return list.find((p) => p.id === id) || list[0];
   },
   update: async (id: string, data: Partial<Project>): Promise<Project> => {
-    try {
+    const resData = await tryApiCall(async () => {
       const res = await api.patch(`/api/projects/${id}`, data);
       return res.data;
-    } catch (err) {
-      const list = getLocalData('clientflow_projects', INITIAL_PROJECTS);
-      const updated = list.map((p) => (p.id === id ? { ...p, ...data } : p));
-      setLocalData('clientflow_projects', updated);
-      return updated.find((p) => p.id === id)!;
-    }
+    });
+    if (resData) return resData;
+
+    const list = getLocalData('clientflow_projects', INITIAL_PROJECTS);
+    const updated = list.map((p) => (p.id === id ? { ...p, ...data } : p));
+    setLocalData('clientflow_projects', updated);
+    return updated.find((p) => p.id === id)!;
   },
   delete: async (id: string) => {
-    try {
+    const resData = await tryApiCall(async () => {
       const res = await api.delete(`/api/projects/${id}`);
       return res.data;
-    } catch (err) {
-      const list = getLocalData('clientflow_projects', INITIAL_PROJECTS);
-      setLocalData('clientflow_projects', list.filter((p) => p.id !== id));
-      return { message: 'Deleted' };
-    }
+    });
+    if (resData) return resData;
+
+    const list = getLocalData('clientflow_projects', INITIAL_PROJECTS);
+    setLocalData('clientflow_projects', list.filter((p) => p.id !== id));
+    return { message: 'Deleted' };
   },
   getHealth: async (id: string): Promise<ProjectHealthDetail> => {
-    try {
+    const data = await tryApiCall(async () => {
       const res = await api.get(`/api/projects/${id}/health`);
       return res.data;
-    } catch (err) {
-      return {
-        score: 87,
-        status: 'On Track',
-        status_code: 'GREEN',
-        breakdown: {
-          task_progress: 85,
-          deadline_safety: 90,
-          approval_readiness: 88,
-          client_responsiveness: 92,
-          recent_activity: 80,
-        },
-        reasons: ['High task velocity', 'Active deliverable reviews'],
-        recommended_actions: ['Follow up with client on pending v2 approvals'],
-      };
-    }
+    });
+    if (data) return data;
+
+    return {
+      score: 87,
+      status: 'On Track',
+      status_code: 'GREEN',
+      breakdown: {
+        task_progress: 85,
+        deadline_safety: 90,
+        approval_readiness: 88,
+        client_responsiveness: 92,
+        recent_activity: 80,
+      },
+      reasons: ['High task velocity', 'Active deliverable reviews'],
+      recommended_actions: ['Follow up with client on pending v2 approvals'],
+    };
   },
 };
 
 export const tasksApi = {
   list: async (projectId?: string): Promise<Task[]> => {
-    try {
+    const data = await tryApiCall(async () => {
       const url = projectId ? `/api/projects/${projectId}/tasks` : '/api/tasks';
       const res = await api.get(url);
       return res.data;
-    } catch (err) {
-      let allTasks = getLocalData<Task[]>('clientflow_tasks', INITIAL_TASKS);
-      if (allTasks.length > INITIAL_TASKS.length) {
-        setLocalData('clientflow_tasks', INITIAL_TASKS);
-        allTasks = INITIAL_TASKS;
-      }
-      return allTasks.filter((t) => !projectId || t.project_id === projectId);
+    });
+    if (data) return data;
+
+    let allTasks = getLocalData<Task[]>('clientflow_tasks', INITIAL_TASKS);
+    if (allTasks.length > INITIAL_TASKS.length) {
+      setLocalData('clientflow_tasks', INITIAL_TASKS);
+      allTasks = INITIAL_TASKS;
     }
+    return allTasks.filter((t) => !projectId || t.project_id === projectId);
   },
   create: async (projectId: string, data: Partial<Task>): Promise<Task> => {
-    try {
+    const resData = await tryApiCall(async () => {
       const res = await api.post(`/api/projects/${projectId}/tasks`, { ...data, project_id: projectId });
       return res.data;
-    } catch (err) {
-      const allTasks = getLocalData('clientflow_tasks', INITIAL_TASKS);
-      const newTask: Task = {
-        id: `task_${Date.now()}`,
-        project_id: projectId,
-        created_by: 'usr_pm',
-        title: data.title || 'New Task',
-        description: data.description || '',
-        status: data.status || 'TO_DO',
-        priority: data.priority || 'MEDIUM',
-        issue_type: data.issue_type || 'STORY',
-        story_points: data.story_points || 3,
-        assignee_id: data.assignee_id,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-      const updated = [newTask, ...allTasks];
-      setLocalData('clientflow_tasks', updated);
-      return newTask;
-    }
+    });
+    if (resData) return resData;
+
+    const allTasks = getLocalData('clientflow_tasks', INITIAL_TASKS);
+    const newTask: Task = {
+      id: `task_${Date.now()}`,
+      project_id: projectId,
+      created_by: 'usr_pm',
+      title: data.title || 'New Task',
+      description: data.description || '',
+      status: data.status || 'TO_DO',
+      priority: data.priority || 'MEDIUM',
+      issue_type: data.issue_type || 'STORY',
+      story_points: data.story_points || 3,
+      assignee_id: data.assignee_id,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+    const updated = [newTask, ...allTasks];
+    setLocalData('clientflow_tasks', updated);
+    return newTask;
   },
   update: async (taskId: string, data: Partial<Task>): Promise<Task> => {
-    try {
+    const resData = await tryApiCall(async () => {
       const res = await api.patch(`/api/tasks/${taskId}`, data);
       return res.data;
-    } catch (err) {
-      const allTasks = getLocalData('clientflow_tasks', INITIAL_TASKS);
-      const updated = allTasks.map((t) => (t.id === taskId ? { ...t, ...data, updated_at: new Date().toISOString() } : t));
-      setLocalData('clientflow_tasks', updated);
-      return updated.find((t) => t.id === taskId)!;
-    }
+    });
+    if (resData) return resData;
+
+    const allTasks = getLocalData('clientflow_tasks', INITIAL_TASKS);
+    const updated = allTasks.map((t) => (t.id === taskId ? { ...t, ...data, updated_at: new Date().toISOString() } : t));
+    setLocalData('clientflow_tasks', updated);
+    return updated.find((t) => t.id === taskId)!;
   },
   delete: async (taskId: string) => {
-    try {
+    const resData = await tryApiCall(async () => {
       const res = await api.delete(`/api/tasks/${taskId}`);
       return res.data;
-    } catch (err) {
-      const allTasks = getLocalData('clientflow_tasks', INITIAL_TASKS);
-      setLocalData('clientflow_tasks', allTasks.filter((t) => t.id !== taskId));
-      return { message: 'Deleted' };
-    }
+    });
+    if (resData) return resData;
+
+    const allTasks = getLocalData('clientflow_tasks', INITIAL_TASKS);
+    setLocalData('clientflow_tasks', allTasks.filter((t) => t.id !== taskId));
+    return { message: 'Deleted' };
   },
 };
 
 export const filesApi = {
   list: async (projectId: string): Promise<ProjectFile[]> => {
-    try {
+    const data = await tryApiCall(async () => {
       const res = await api.get(`/api/projects/${projectId}/files`);
       return res.data;
-    } catch (err) {
-      return [
-        {
-          id: 'file_1',
-          project_id: projectId,
-          uploaded_by: 'usr_dev',
-          folder: 'Deliverables',
-          filename: 'Homepage_Design_v2.png',
-          storage_url: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800',
-          mime_type: 'image/png',
-          size_bytes: 2450000,
-          current_version: 2,
-          approval_status: 'PENDING',
-          created_at: new Date().toISOString(),
-        },
-      ];
-    }
+    });
+    if (data) return data;
+
+    return [
+      {
+        id: 'file_1',
+        project_id: projectId,
+        uploaded_by: 'usr_dev',
+        folder: 'Deliverables',
+        filename: 'Homepage_Design_v2.png',
+        storage_url: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800',
+        mime_type: 'image/png',
+        size_bytes: 2450000,
+        current_version: 2,
+        approval_status: 'PENDING',
+        created_at: new Date().toISOString(),
+      },
+    ];
   },
   upload: async (projectId: string, formData: FormData): Promise<ProjectFile> => {
-    try {
+    const data = await tryApiCall(async () => {
       const res = await api.post(`/api/projects/${projectId}/files`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       return res.data;
-    } catch (err) {
-      return {
-        id: `file_${Date.now()}`,
-        project_id: projectId,
-        uploaded_by: 'usr_dev',
-        folder: 'Deliverables',
-        filename: 'Uploaded_Deliverable_v1.pdf',
-        storage_url: '#',
-        mime_type: 'application/pdf',
-        size_bytes: 1500000,
-        current_version: 1,
-        approval_status: 'PENDING',
-        created_at: new Date().toISOString(),
-      };
-    }
+    });
+    if (data) return data;
+
+    return {
+      id: `file_${Date.now()}`,
+      project_id: projectId,
+      uploaded_by: 'usr_dev',
+      folder: 'Deliverables',
+      filename: 'Uploaded_Deliverable_v1.pdf',
+      storage_url: '#',
+      mime_type: 'application/pdf',
+      size_bytes: 1500000,
+      current_version: 1,
+      approval_status: 'PENDING',
+      created_at: new Date().toISOString(),
+    };
   },
   uploadVersion: async (fileId: string, formData: FormData): Promise<ProjectFile> => {
-    try {
+    const data = await tryApiCall(async () => {
       const res = await api.post(`/api/files/${fileId}/versions`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       return res.data;
-    } catch (err) {
-      return {
-        id: fileId,
-        project_id: 'proj_1',
-        uploaded_by: 'usr_dev',
-        folder: 'Deliverables',
-        filename: 'Updated_Deliverable_v3.png',
-        storage_url: '#',
-        mime_type: 'image/png',
-        size_bytes: 2800000,
-        current_version: 3,
-        approval_status: 'PENDING',
-        created_at: new Date().toISOString(),
-      };
-    }
+    });
+    if (data) return data;
+
+    return {
+      id: fileId,
+      project_id: 'proj_1',
+      uploaded_by: 'usr_dev',
+      folder: 'Deliverables',
+      filename: 'Updated_Deliverable_v3.png',
+      storage_url: '#',
+      mime_type: 'image/png',
+      size_bytes: 2800000,
+      current_version: 3,
+      approval_status: 'PENDING',
+      created_at: new Date().toISOString(),
+    };
   },
 };
 
@@ -717,281 +755,297 @@ const INITIAL_APPROVALS: Approval[] = [
 
 export const approvalsApi = {
   list: async (projectId: string): Promise<Approval[]> => {
-    try {
+    const data = await tryApiCall(async () => {
       const res = await api.get(`/api/projects/${projectId}/approvals`);
       return res.data;
-    } catch (err) {
-      const list = getLocalData<Approval[]>('clientflow_approvals', INITIAL_APPROVALS);
-      return list.filter((a) => a.project_id === projectId);
-    }
+    });
+    if (data) return data;
+
+    const list = getLocalData<Approval[]>('clientflow_approvals', INITIAL_APPROVALS);
+    return list.filter((a) => a.project_id === projectId);
   },
   create: async (data: Partial<Approval>): Promise<Approval> => {
-    try {
+    const resData = await tryApiCall(async () => {
       const res = await api.post('/api/approvals', data);
       return res.data;
-    } catch (err) {
-      const current = getLocalData<Approval[]>('clientflow_approvals', INITIAL_APPROVALS);
-      const newApproval: Approval = {
-        id: `app_${Date.now()}`,
-        project_id: data.project_id || 'proj_1',
-        file_id: data.file_id,
-        title: data.title || 'New Verification / Approval Request',
-        description: data.description || '',
-        status: 'PENDING',
-        requested_by_user_id: data.requested_by_user_id || 'usr_dev',
-        requested_by_name: data.requested_by_name || 'Aarav Sharma (Developer)',
-        requested_by_role: data.requested_by_role || 'TEAM_MEMBER',
-        target_recipient: data.target_recipient || 'EVERYONE',
-        requested_from_user_id: data.requested_from_user_id || 'usr_client',
-        created_at: new Date().toISOString(),
-      };
-      const updated = [newApproval, ...current];
-      setLocalData('clientflow_approvals', updated);
-      return newApproval;
-    }
+    });
+    if (resData) return resData;
+
+    const current = getLocalData<Approval[]>('clientflow_approvals', INITIAL_APPROVALS);
+    const newApproval: Approval = {
+      id: `app_${Date.now()}`,
+      project_id: data.project_id || 'proj_1',
+      file_id: data.file_id,
+      title: data.title || 'New Verification / Approval Request',
+      description: data.description || '',
+      status: 'PENDING',
+      requested_by_user_id: data.requested_by_user_id || 'usr_dev',
+      requested_by_name: data.requested_by_name || 'Aarav Sharma (Developer)',
+      requested_by_role: data.requested_by_role || 'TEAM_MEMBER',
+      target_recipient: data.target_recipient || 'EVERYONE',
+      requested_from_user_id: data.requested_from_user_id || 'usr_client',
+      created_at: new Date().toISOString(),
+    };
+    const updated = [newApproval, ...current];
+    setLocalData('clientflow_approvals', updated);
+    return newApproval;
   },
   approve: async (approvalId: string, feedback?: string): Promise<Approval> => {
-    try {
+    const resData = await tryApiCall(async () => {
       const res = await api.post(`/api/approvals/${approvalId}/approve`, { status: 'APPROVED', feedback });
       return res.data;
-    } catch (err) {
-      const current = getLocalData<Approval[]>('clientflow_approvals', INITIAL_APPROVALS);
-      const updated = current.map((a) =>
-        a.id === approvalId
-          ? {
-              ...a,
-              status: 'APPROVED' as const,
-              feedback: feedback || 'Approved and verified cleanly!',
-              decided_at: new Date().toISOString(),
-            }
-          : a
-      );
-      setLocalData('clientflow_approvals', updated);
-      return updated.find((a) => a.id === approvalId)!;
-    }
+    });
+    if (resData) return resData;
+
+    const current = getLocalData<Approval[]>('clientflow_approvals', INITIAL_APPROVALS);
+    const updated = current.map((a) =>
+      a.id === approvalId
+        ? {
+            ...a,
+            status: 'APPROVED' as const,
+            feedback: feedback || 'Approved and verified cleanly!',
+            decided_at: new Date().toISOString(),
+          }
+        : a
+    );
+    setLocalData('clientflow_approvals', updated);
+    return updated.find((a) => a.id === approvalId)!;
   },
   requestChanges: async (approvalId: string, feedback: string): Promise<Approval> => {
-    try {
+    const resData = await tryApiCall(async () => {
       const res = await api.post(`/api/approvals/${approvalId}/request-changes`, { status: 'CHANGES_REQUESTED', feedback });
       return res.data;
-    } catch (err) {
-      const current = getLocalData<Approval[]>('clientflow_approvals', INITIAL_APPROVALS);
-      const updated = current.map((a) =>
-        a.id === approvalId
-          ? {
-              ...a,
-              status: 'CHANGES_REQUESTED' as const,
-              feedback: feedback || 'Revisions needed.',
-              decided_at: new Date().toISOString(),
-            }
-          : a
-      );
-      setLocalData('clientflow_approvals', updated);
-      return updated.find((a) => a.id === approvalId)!;
-    }
+    });
+    if (resData) return resData;
+
+    const current = getLocalData<Approval[]>('clientflow_approvals', INITIAL_APPROVALS);
+    const updated = current.map((a) =>
+      a.id === approvalId
+        ? {
+            ...a,
+            status: 'CHANGES_REQUESTED' as const,
+            feedback: feedback || 'Revisions needed.',
+            decided_at: new Date().toISOString(),
+          }
+        : a
+    );
+    setLocalData('clientflow_approvals', updated);
+    return updated.find((a) => a.id === approvalId)!;
   },
   getActionCenter: async (): Promise<Approval[]> => {
-    try {
+    const data = await tryApiCall(async () => {
       const res = await api.get('/api/action-center');
       return res.data;
-    } catch (err) {
-      const list = getLocalData<Approval[]>('clientflow_approvals', INITIAL_APPROVALS);
-      return list.filter((a) => a.status === 'PENDING');
-    }
+    });
+    if (data) return data;
+
+    const list = getLocalData<Approval[]>('clientflow_approvals', INITIAL_APPROVALS);
+    return list.filter((a) => a.status === 'PENDING');
   },
 };
 
 export const messagesApi = {
   list: async (projectId: string): Promise<Message[]> => {
-    try {
+    const data = await tryApiCall(async () => {
       const res = await api.get(`/api/projects/${projectId}/messages`);
       return res.data;
-    } catch (err) {
-      const allMsg = getLocalData('clientflow_messages', [
-        {
-          id: 'msg_1',
-          project_id: projectId,
-          sender_id: 'usr_client',
-          message: 'The new hero wireframe looks great! Could we adjust the primary button color?',
-          created_at: new Date().toISOString(),
-        },
-      ]);
-      return allMsg;
-    }
+    });
+    if (data) return data;
+
+    const allMsg = getLocalData('clientflow_messages', [
+      {
+        id: 'msg_1',
+        project_id: projectId,
+        sender_id: 'usr_client',
+        message: 'The new hero wireframe looks great! Could we adjust the primary button color?',
+        created_at: new Date().toISOString(),
+      },
+    ]);
+    return allMsg;
   },
   send: async (projectId: string, message: string, attachment_url?: string): Promise<Message> => {
-    try {
+    const resData = await tryApiCall(async () => {
       const res = await api.post(`/api/projects/${projectId}/messages`, { message, attachment_url });
       return res.data;
-    } catch (err) {
-      const current = getLocalData('clientflow_messages', []);
-      const newMsg: Message = {
-        id: `msg_${Date.now()}`,
-        project_id: projectId,
-        sender_id: 'usr_admin',
-        message,
-        attachment_url,
-        created_at: new Date().toISOString(),
-      };
-      const updated = [...current, newMsg];
-      setLocalData('clientflow_messages', updated);
-      return newMsg;
-    }
+    });
+    if (resData) return resData;
+
+    const current = getLocalData('clientflow_messages', []);
+    const newMsg: Message = {
+      id: `msg_${Date.now()}`,
+      project_id: projectId,
+      sender_id: 'usr_admin',
+      message,
+      attachment_url,
+      created_at: new Date().toISOString(),
+    };
+    const updated = [...current, newMsg];
+    setLocalData('clientflow_messages', updated);
+    return newMsg;
   },
 };
 
 export const notificationsApi = {
   list: async (): Promise<Notification[]> => {
-    try {
+    const data = await tryApiCall(async () => {
       const res = await api.get('/api/notifications');
       return res.data;
-    } catch (err) {
-      return getLocalData('clientflow_notifs', INITIAL_NOTIFS);
-    }
+    });
+    if (data) return data;
+
+    return getLocalData('clientflow_notifs', INITIAL_NOTIFS);
   },
   markRead: async (id: string): Promise<Notification> => {
-    try {
+    const resData = await tryApiCall(async () => {
       const res = await api.patch(`/api/notifications/${id}/read`);
       return res.data;
-    } catch (err) {
-      const notifs = getLocalData('clientflow_notifs', INITIAL_NOTIFS);
-      const updated = notifs.map((n) => (n.id === id ? { ...n, is_read: true } : n));
-      setLocalData('clientflow_notifs', updated);
-      return updated.find((n) => n.id === id)!;
-    }
+    });
+    if (resData) return resData;
+
+    const notifs = getLocalData('clientflow_notifs', INITIAL_NOTIFS);
+    const updated = notifs.map((n) => (n.id === id ? { ...n, is_read: true } : n));
+    setLocalData('clientflow_notifs', updated);
+    return updated.find((n) => n.id === id)!;
   },
   markAllRead: async () => {
-    try {
+    const resData = await tryApiCall(async () => {
       const res = await api.post('/api/notifications/read-all');
       return res.data;
-    } catch (err) {
-      const notifs = getLocalData('clientflow_notifs', INITIAL_NOTIFS);
-      const updated = notifs.map((n) => ({ ...n, is_read: true }));
-      setLocalData('clientflow_notifs', updated);
-      return { message: 'All marked read' };
-    }
+    });
+    if (resData) return resData;
+
+    const notifs = getLocalData('clientflow_notifs', INITIAL_NOTIFS);
+    const updated = notifs.map((n) => ({ ...n, is_read: true }));
+    setLocalData('clientflow_notifs', updated);
+    return { message: 'All marked read' };
   },
   getProjectActivity: async (projectId: string): Promise<ActivityLog[]> => {
-    try {
+    const data = await tryApiCall(async () => {
       const res = await api.get(`/api/projects/${projectId}/activity`);
       return res.data;
-    } catch (err) {
-      return [
-        {
-          id: 'act_1',
-          organization_id: 'org_novaworks',
-          project_id: projectId,
-          user_id: 'usr_admin',
-          action: 'Created task "Fix hero line wrapping"',
-          entity_type: 'TASK',
-          entity_id: 'task_3',
-          created_at: new Date().toISOString(),
-        },
-      ];
-    }
+    });
+    if (data) return data;
+
+    return [
+      {
+        id: 'act_1',
+        organization_id: 'org_novaworks',
+        project_id: projectId,
+        user_id: 'usr_admin',
+        action: 'Created task "Fix hero line wrapping"',
+        entity_type: 'TASK',
+        entity_id: 'task_3',
+        created_at: new Date().toISOString(),
+      },
+    ];
   },
 };
 
 export const aiApi = {
   getSummary: async (projectId: string): Promise<AISummary> => {
-    try {
+    const data = await tryApiCall(async () => {
       const res = await api.post(`/api/ai/projects/${projectId}/summary`);
       return res.data;
-    } catch (err) {
-      return {
-        summary: 'Project status is healthy with 87/100 score. Sprint 14 deliverable v2 is pending client signoff.',
-        completed_work: ['Sprint 13 Frontend Launch', 'Database Migration to Postgres'],
-        pending_work: ['Homepage_Wireframe_v2.png'],
-        risks: ['Follow up with David Vance on approval'],
-        next_action: 'Assign bug fix task WEB-104',
-      };
-    }
+    });
+    if (data) return data;
+
+    return {
+      summary: 'Project status is healthy with 87/100 score. Sprint 14 deliverable v2 is pending client signoff.',
+      completed_work: ['Sprint 13 Frontend Launch', 'Database Migration to Postgres'],
+      pending_work: ['Homepage_Wireframe_v2.png'],
+      risks: ['Follow up with David Vance on approval'],
+      next_action: 'Assign bug fix task WEB-104',
+    };
   },
   extractTasks: async (projectId: string, text: string): Promise<ExtractedTask[]> => {
-    try {
+    const data = await tryApiCall(async () => {
       const res = await api.post(`/api/ai/projects/${projectId}/extract-tasks`, { text });
       return res.data;
-    } catch (err) {
-      return [
-        {
-          title: 'Update hero CTA button hover state',
-          description: 'Fix hover transition speed on desktop view',
-          priority: 'HIGH',
-          source_text: text,
-        },
-        {
-          title: 'Add secondary payment gateway option',
-          description: 'Implement PayPal fallback checkout',
-          priority: 'MEDIUM',
-          source_text: text,
-        },
-      ];
-    }
+    });
+    if (data) return data;
+
+    return [
+      {
+        title: 'Update hero CTA button hover state',
+        description: 'Fix hover transition speed on desktop view',
+        priority: 'HIGH',
+        source_text: text,
+      },
+      {
+        title: 'Add secondary payment gateway option',
+        description: 'Implement PayPal fallback checkout',
+        priority: 'MEDIUM',
+        source_text: text,
+      },
+    ];
   },
   getRisk: async (projectId: string) => {
-    try {
+    const data = await tryApiCall(async () => {
       const res = await api.post(`/api/ai/projects/${projectId}/risk`);
       return res.data;
-    } catch (err) {
-      return {
-        risk_level: 'LOW',
-        risk_score: 18,
-        factors: ['Deliverable v2 pending review for 2 hours'],
-        recommendations: ['Send gentle reminder email to client'],
-      };
-    }
+    });
+    if (data) return data;
+
+    return {
+      risk_level: 'LOW',
+      risk_score: 18,
+      factors: ['Deliverable v2 pending review for 2 hours'],
+      recommendations: ['Send gentle reminder email to client'],
+    };
   },
   chat: async (projectId: string, message: string): Promise<{ response: string }> => {
-    try {
+    const data = await tryApiCall(async () => {
       const res = await api.post(`/api/ai/projects/${projectId}/chat`, { message });
       return res.data;
-    } catch (err) {
-      return {
-        response: `Based on your live workspace data for project "${projectId}", 3 tasks are currently in progress and 1 deliverable is awaiting client review.`,
-      };
-    }
+    });
+    if (data) return data;
+
+    return {
+      response: `Based on your live workspace data for project "${projectId}", 3 tasks are currently in progress and 1 deliverable is awaiting client review.`,
+    };
   },
 };
 
 export const reportsApi = {
   getCompletionReport: async (projectId: string): Promise<ProjectReport> => {
-    try {
+    const data = await tryApiCall(async () => {
       const res = await api.get(`/api/projects/${projectId}/report`);
       return res.data;
-    } catch (err) {
-      return {
-        project: INITIAL_PROJECTS[0],
-        task_stats: {
-          total: 16,
-          done: 14,
-          in_progress: 1,
-          review: 0,
-          to_do: 1,
+    });
+    if (data) return data;
+
+    return {
+      project: INITIAL_PROJECTS[0],
+      task_stats: {
+        total: 16,
+        done: 14,
+        in_progress: 1,
+        review: 0,
+        to_do: 1,
+      },
+      approval_stats: {
+        total: 5,
+        approved: 4,
+        changes_requested: 0,
+        pending: 1,
+      },
+      health_breakdown: {
+        score: 87,
+        status: 'On Track',
+        status_code: 'GREEN',
+        breakdown: {
+          task_progress: 85,
+          deadline_safety: 90,
+          approval_readiness: 88,
+          client_responsiveness: 92,
+          recent_activity: 80,
         },
-        approval_stats: {
-          total: 5,
-          approved: 4,
-          changes_requested: 0,
-          pending: 1,
-        },
-        health_breakdown: {
-          score: 87,
-          status: 'On Track',
-          status_code: 'GREEN',
-          breakdown: {
-            task_progress: 85,
-            deadline_safety: 90,
-            approval_readiness: 88,
-            client_responsiveness: 92,
-            recent_activity: 80,
-          },
-          reasons: ['High task completion rate'],
-          recommended_actions: ['Review final deliverable'],
-        },
-        recent_activity: [],
-        completion_summary: 'Project is on track for completion with 94% approval velocity.',
-      };
-    }
+        reasons: ['High task completion rate'],
+        recommended_actions: ['Review final deliverable'],
+      },
+      recent_activity: [],
+      completion_summary: 'Project is on track for completion with 94% approval velocity.',
+    };
   },
 };
 
