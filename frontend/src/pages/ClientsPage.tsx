@@ -1,29 +1,83 @@
-import React, { useState } from 'react';
-import { Users, Search, Plus, Filter, Mail, Phone, ExternalLink, Star, CheckCircle2, ArrowUpRight, FolderKanban, Clock } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Users, Search, Plus, Filter, Mail, Phone, ExternalLink, Star, CheckCircle2, ArrowUpRight, FolderKanban, Clock, X, Building, UserCheck } from 'lucide-react';
+
+interface ClientAccount {
+  id: string;
+  name: string;
+  contact: string;
+  email: string;
+  phone?: string;
+  projects: number;
+  rating: number;
+  status: string;
+  lastActive: string;
+  avatar: string;
+}
+
+const INITIAL_CLIENTS: ClientAccount[] = [
+  { id: '1', name: 'Northstar Labs', contact: 'David Vance', email: 'david@northstarlabs.io', projects: 12, rating: 4.9, status: 'ACTIVE', lastActive: '10 mins ago', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150' },
+  { id: '2', name: 'Vertex Studio', contact: 'Elena Rostova', email: 'elena@vertexstudio.com', projects: 8, rating: 4.8, status: 'ACTIVE', lastActive: '1 hour ago', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150' },
+  { id: '3', name: 'BluePeak Technologies', contact: 'Marcus Chen', email: 'marcus@bluepeak.tech', projects: 6, rating: 4.7, status: 'ACTIVE', lastActive: '3 hours ago', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150' },
+  { id: '4', name: 'Nova Digital', contact: 'Sarah Jenkins', email: 'sarah@novadigital.agency', projects: 14, rating: 5.0, status: 'ACTIVE', lastActive: '25 mins ago', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150' },
+  { id: '5', name: 'Apex Systems', contact: 'Robert Sterling', email: 'rsterling@apexsystems.com', projects: 5, rating: 4.6, status: 'ACTIVE', lastActive: 'Yesterday', avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150' },
+  { id: '6', name: 'Orbit Media', contact: 'Jessica Walsh', email: 'jessica@orbitmedia.co', projects: 9, rating: 4.9, status: 'ACTIVE', lastActive: '2 hours ago', avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150' },
+];
 
 export const ClientsPage: React.FC = () => {
+  const [clients, setClients] = useState<ClientAccount[]>(() => {
+    try {
+      const saved = localStorage.getItem('clientflow_clients');
+      return saved ? JSON.parse(saved) : INITIAL_CLIENTS;
+    } catch {
+      return INITIAL_CLIENTS;
+    }
+  });
+
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('ALL');
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
 
-  const demoClients = [
-    { id: '1', name: 'Northstar Labs', contact: 'David Vance', email: 'david@northstarlabs.io', projects: 12, rating: 4.9, status: 'ACTIVE', lastActive: '10 mins ago', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150' },
-    { id: '2', name: 'Vertex Studio', contact: 'Elena Rostova', email: 'elena@vertexstudio.com', projects: 8, rating: 4.8, status: 'ACTIVE', lastActive: '1 hour ago', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150' },
-    { id: '3', name: 'BluePeak Technologies', contact: 'Marcus Chen', email: 'marcus@bluepeak.tech', projects: 6, rating: 4.7, status: 'ACTIVE', lastActive: '3 hours ago', avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150' },
-    { id: '4', name: 'Nova Digital', contact: 'Sarah Jenkins', email: 'sarah@novadigital.agency', projects: 14, rating: 5.0, status: 'ACTIVE', lastActive: '25 mins ago', avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150' },
-    { id: '5', name: 'Apex Systems', contact: 'Robert Sterling', email: 'rsterling@apexsystems.com', projects: 5, rating: 4.6, status: 'ACTIVE', lastActive: 'Yesterday', avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150' },
-    { id: '6', name: 'Orbit Media', contact: 'Jessica Walsh', email: 'jessica@orbitmedia.co', projects: 9, rating: 4.9, status: 'ACTIVE', lastActive: '2 hours ago', avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150' },
-    { id: '7', name: 'PixelForge', contact: 'Michael Chang', email: 'm.chang@pixelforge.design', projects: 4, rating: 4.8, status: 'ACTIVE', lastActive: '4 hours ago', avatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=150' },
-    { id: '8', name: 'Crestline Consulting', contact: 'Amanda Hayes', email: 'amanda@crestline.org', projects: 11, rating: 4.9, status: 'ACTIVE', lastActive: '12 mins ago', avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150' },
-    { id: '9', name: 'GreenByte Solutions', contact: 'Vikram Patel', email: 'vikram@greenbyte.io', projects: 7, rating: 4.7, status: 'ACTIVE', lastActive: '5 hours ago', avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=150' },
-    { id: '10', name: 'UrbanStack', contact: 'Chloe Bennett', email: 'chloe@urbanstack.net', projects: 15, rating: 4.9, status: 'ACTIVE', lastActive: 'Just now', avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=150' },
-    { id: '11', name: 'BioCare Systems', contact: 'Dr. Evelyn Reed', email: 'evelyn@biocare.org', projects: 8, rating: 5.0, status: 'ACTIVE', lastActive: '15 mins ago', avatar: 'https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=150' },
-    { id: '12', name: 'DataPulse Corp', contact: 'Nathan Drake', email: 'nathan@datapulse.io', projects: 6, rating: 4.8, status: 'ACTIVE', lastActive: '45 mins ago', avatar: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=150' },
-    { id: '13', name: 'SolanaPay Inc', contact: 'Tariq Al-Mansoor', email: 'tariq@solanapay.io', projects: 10, rating: 4.9, status: 'ACTIVE', lastActive: '2 hours ago', avatar: 'https://images.unsplash.com/photo-1501196354995-cbb51c65aaea?w=150' },
-    { id: '14', name: 'OmniFreight Global', contact: 'Hannah Schmidt', email: 'hannah@omnifreight.de', projects: 11, rating: 4.7, status: 'ACTIVE', lastActive: '3 hours ago', avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150' },
-  ];
+  // Add Client Modal State
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [companyName, setCompanyName] = useState('');
+  const [contactName, setContactName] = useState('');
+  const [contactEmail, setContactEmail] = useState('');
+  const [contactPhone, setContactPhone] = useState('');
+  const [assignedProjectCount, setAssignedProjectCount] = useState('1');
 
-  const filtered = demoClients.filter(c => 
+  useEffect(() => {
+    try {
+      localStorage.setItem('clientflow_clients', JSON.stringify(clients));
+    } catch (e) {
+      console.error(e);
+    }
+  }, [clients]);
+
+  const handleAddClientSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!companyName.trim() || !contactEmail.trim()) return;
+
+    const newClient: ClientAccount = {
+      id: `client_${Date.now()}`,
+      name: companyName,
+      contact: contactName || 'Primary Contact',
+      email: contactEmail,
+      phone: contactPhone,
+      projects: parseInt(assignedProjectCount) || 1,
+      rating: 5.0,
+      status: 'ACTIVE',
+      lastActive: 'Just now',
+      avatar: `https://images.unsplash.com/photo-${1500648767791 + (clients.length * 100)}?w=150`,
+    };
+
+    setClients([newClient, ...clients]);
+    setShowAddModal(false);
+    setCompanyName('');
+    setContactName('');
+    setContactEmail('');
+    setContactPhone('');
+  };
+
+  const filtered = clients.filter(c => 
     c.name.toLowerCase().includes(search.toLowerCase()) || 
     c.contact.toLowerCase().includes(search.toLowerCase()) ||
     c.email.toLowerCase().includes(search.toLowerCase())
@@ -32,11 +86,11 @@ export const ClientsPage: React.FC = () => {
   return (
     <div className="space-y-6 animate-fadeIn text-slate-900 dark:text-white text-left">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-4">
         <div>
           <div className="flex items-center gap-2">
             <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 font-extrabold text-[10px] uppercase border border-emerald-200 dark:border-emerald-800">
-              128 Total Accounts
+              {clients.length} Active Client Accounts
             </span>
           </div>
           <h1 className="text-2xl font-black text-slate-900 dark:text-white mt-1 flex items-center gap-2">
@@ -47,7 +101,10 @@ export const ClientsPage: React.FC = () => {
           </p>
         </div>
 
-        <button className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl text-xs font-extrabold shadow-md transition-all flex items-center gap-1.5 cursor-pointer">
+        <button
+          onClick={() => setShowAddModal(true)}
+          className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl text-xs font-extrabold shadow-md transition-all flex items-center gap-1.5 cursor-pointer"
+        >
           <Plus className="w-4 h-4" /> Add New Client Account
         </button>
       </div>
@@ -56,8 +113,8 @@ export const ClientsPage: React.FC = () => {
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
         <div className="p-4 rounded-3xl glass-card border border-slate-200/80 dark:border-slate-800 space-y-1">
           <span className="text-xs font-bold text-slate-500 dark:text-slate-400">Total Clients</span>
-          <div className="text-2xl font-black text-slate-900 dark:text-white">128</div>
-          <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">+14 new this month</span>
+          <div className="text-2xl font-black text-slate-900 dark:text-white">{clients.length}</div>
+          <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">+100% Client Satisfaction</span>
         </div>
         <div className="p-4 rounded-3xl glass-card border border-slate-200/80 dark:border-slate-800 space-y-1">
           <span className="text-xs font-bold text-slate-500 dark:text-slate-400">Active Workspaces</span>
@@ -67,9 +124,9 @@ export const ClientsPage: React.FC = () => {
         <div className="p-4 rounded-3xl glass-card border border-slate-200/80 dark:border-slate-800 space-y-1">
           <span className="text-xs font-bold text-slate-500 dark:text-slate-400">Avg Satisfaction</span>
           <div className="text-2xl font-black text-amber-500 flex items-center gap-1">
-            4.8 <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
+            4.9 <Star className="w-4 h-4 fill-amber-400 text-amber-400" />
           </div>
-          <span className="text-[10px] text-slate-400">98% positive rating</span>
+          <span className="text-[10px] text-slate-400">99% positive rating</span>
         </div>
         <div className="p-4 rounded-3xl glass-card border border-slate-200/80 dark:border-slate-800 space-y-1">
           <span className="text-xs font-bold text-slate-500 dark:text-slate-400">Pending Approvals</span>
@@ -190,6 +247,112 @@ export const ClientsPage: React.FC = () => {
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* Add New Client Account Modal */}
+      {showAddModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-md animate-fadeIn">
+          <form
+            onSubmit={handleAddClientSubmit}
+            className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl text-left"
+          >
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+              <div>
+                <h3 className="font-extrabold text-lg text-slate-900 dark:text-white flex items-center gap-2">
+                  <Building className="w-5 h-5 text-indigo-600" /> Register New Client Account
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 font-normal">
+                  Create a dedicated client portal account for team sign-offs.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowAddModal(false)}
+                className="p-1 rounded-full text-slate-400 hover:text-slate-600"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-xs text-slate-700 dark:text-slate-300 font-semibold">Company / Client Name</label>
+              <input
+                type="text"
+                required
+                value={companyName}
+                onChange={(e) => setCompanyName(e.target.value)}
+                placeholder="e.g. Quantum Financial Corp"
+                className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs text-slate-900 dark:text-white focus:outline-none"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <label className="text-xs text-slate-700 dark:text-slate-300 font-semibold">Primary Contact Name</label>
+                <input
+                  type="text"
+                  required
+                  value={contactName}
+                  onChange={(e) => setContactName(e.target.value)}
+                  placeholder="e.g. David Vance"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs text-slate-900 dark:text-white focus:outline-none"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs text-slate-700 dark:text-slate-300 font-semibold">Contact Email</label>
+                <input
+                  type="email"
+                  required
+                  value={contactEmail}
+                  onChange={(e) => setContactEmail(e.target.value)}
+                  placeholder="david@quantum.fin"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs text-slate-900 dark:text-white focus:outline-none"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <label className="text-xs text-slate-700 dark:text-slate-300 font-semibold">Phone Number (Optional)</label>
+                <input
+                  type="text"
+                  value={contactPhone}
+                  onChange={(e) => setContactPhone(e.target.value)}
+                  placeholder="+1 (555) 019-2834"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs text-slate-900 dark:text-white focus:outline-none"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs text-slate-700 dark:text-slate-300 font-semibold">Assigned Projects</label>
+                <input
+                  type="number"
+                  value={assignedProjectCount}
+                  onChange={(e) => setAssignedProjectCount(e.target.value)}
+                  placeholder="1"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs text-slate-900 dark:text-white focus:outline-none"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 pt-3 border-t border-slate-100 dark:border-slate-800">
+              <button
+                type="button"
+                onClick={() => setShowAddModal(false)}
+                className="px-4 py-2 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-2xl text-xs font-bold"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl text-xs font-extrabold shadow-md"
+              >
+                Create Client Account
+              </button>
+            </div>
+          </form>
         </div>
       )}
     </div>

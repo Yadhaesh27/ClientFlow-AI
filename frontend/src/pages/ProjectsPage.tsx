@@ -33,10 +33,14 @@ export const ProjectsPage: React.FC<ProjectsPageProps> = ({ onSelectProject }) =
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newProjName, setNewProjName] = useState('');
   const [newProjDesc, setNewProjDesc] = useState('');
-  const [newProjClient, setNewProjClient] = useState('');
+  const [newProjClient, setNewProjClient] = useState('usr_client');
   const [newProjBudget, setNewProjBudget] = useState('50000');
   const [newProjDeadline, setNewProjDeadline] = useState('2026-11-30');
   const [submitting, setSubmitting] = useState(false);
+
+  // Assign Client Modal State
+  const [assignModalProject, setAssignModalProject] = useState<Project | null>(null);
+  const [assignClientUserId, setAssignClientUserId] = useState('usr_client');
 
   const loadProjects = async () => {
     setLoading(true);
@@ -63,6 +67,7 @@ export const ProjectsPage: React.FC<ProjectsPageProps> = ({ onSelectProject }) =
       await projectsApi.create({
         name: newProjName,
         description: newProjDesc,
+        client_user_id: newProjClient,
         status: 'ACTIVE' as ProjectStatus,
         progress: 0,
         health_score: 90,
@@ -77,6 +82,17 @@ export const ProjectsPage: React.FC<ProjectsPageProps> = ({ onSelectProject }) =
       console.error(err);
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleAssignClient = async () => {
+    if (!assignModalProject) return;
+    try {
+      await projectsApi.update(assignModalProject.id, { client_user_id: assignClientUserId });
+      setAssignModalProject(null);
+      loadProjects();
+    } catch (err) {
+      console.error(err);
     }
   };
 
@@ -233,6 +249,24 @@ export const ProjectsPage: React.FC<ProjectsPageProps> = ({ onSelectProject }) =
               {/* Footer Metadata */}
               <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 border-t border-slate-100 dark:border-slate-800 pt-3">
                 <span className="flex items-center gap-1 font-normal">
+                  <Building className="w-3.5 h-3.5 text-indigo-500" />
+                  Client: <span className="font-bold text-slate-800 dark:text-slate-200">{proj.client_user_id ? 'Northstar Labs (David Vance)' : 'Vertex Studio'}</span>
+                </span>
+
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setAssignModalProject(proj);
+                  }}
+                  className="px-2 py-0.5 rounded-lg bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-sky-300 font-extrabold text-[10px] hover:bg-indigo-100 transition-all"
+                >
+                  Edit Client
+                </button>
+              </div>
+
+              <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 pt-1">
+                <span className="flex items-center gap-1 font-normal">
                   <Clock className="w-3.5 h-3.5 text-slate-400" />
                   Due: {proj.deadline || 'Flexible'}
                 </span>
@@ -298,6 +332,22 @@ export const ProjectsPage: React.FC<ProjectsPageProps> = ({ onSelectProject }) =
                 />
               </div>
 
+              <div className="space-y-1">
+                <label className="text-xs font-medium text-slate-700 dark:text-slate-300">
+                  Assign Client Account
+                </label>
+                <select
+                  value={newProjClient}
+                  onChange={(e) => setNewProjClient(e.target.value)}
+                  className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs text-slate-800 dark:text-slate-100 font-bold focus:outline-none"
+                >
+                  <option value="usr_client">Northstar Labs (David Vance - david@northstarlabs.io)</option>
+                  <option value="usr_vertex">Vertex Studio (Elena Rostova - elena@vertexstudio.com)</option>
+                  <option value="usr_quantum">Quantum Financial (Marcus Chen - marcus@quantum.fin)</option>
+                  <option value="usr_horizon">Horizon Media (Sarah Jenkins - sarah@horizon.media)</option>
+                </select>
+              </div>
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <label className="text-xs font-medium text-slate-700 dark:text-slate-300">
@@ -335,6 +385,48 @@ export const ProjectsPage: React.FC<ProjectsPageProps> = ({ onSelectProject }) =
               </button>
             </form>
 
+          </div>
+        </div>
+      )}
+
+      {/* Assign Client Modal */}
+      {assignModalProject && (
+        <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in">
+          <div className="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl p-6 space-y-4 text-left">
+            <h3 className="font-extrabold text-base text-slate-900 dark:text-white flex items-center gap-2">
+              <Building className="w-5 h-5 text-indigo-500" /> Assign Client to {assignModalProject.name}
+            </h3>
+
+            <div className="space-y-1">
+              <label className="text-xs font-medium text-slate-700 dark:text-slate-300">Select Client Account</label>
+              <select
+                value={assignClientUserId}
+                onChange={(e) => setAssignClientUserId(e.target.value)}
+                className="w-full px-3.5 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-2xl text-xs text-slate-900 dark:text-white font-bold focus:outline-none"
+              >
+                <option value="usr_client">Northstar Labs (David Vance - david@northstarlabs.io)</option>
+                <option value="usr_vertex">Vertex Studio (Elena Rostova - elena@vertexstudio.com)</option>
+                <option value="usr_quantum">Quantum Financial (Marcus Chen - marcus@quantum.fin)</option>
+                <option value="usr_horizon">Horizon Media (Sarah Jenkins - sarah@horizon.media)</option>
+              </select>
+            </div>
+
+            <div className="flex justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setAssignModalProject(null)}
+                className="px-4 py-2 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-2xl text-xs font-bold"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleAssignClient}
+                className="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-2xl text-xs font-extrabold shadow-md"
+              >
+                Save Client Assignment
+              </button>
+            </div>
           </div>
         </div>
       )}

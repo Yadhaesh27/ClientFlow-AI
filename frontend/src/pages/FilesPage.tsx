@@ -70,16 +70,18 @@ export const FilesPage: React.FC<FilesPageProps> = ({ projectId }) => {
       const uploaded = await filesApi.upload(selectedProjectId, formData);
 
       if (requestApproval) {
-        const proj = projects.find(p => p.id === selectedProjectId);
-        if (proj && proj.client_user_id) {
-          await approvalsApi.create({
-            project_id: selectedProjectId,
-            file_id: uploaded.id,
-            title: `Approval Request: ${uploaded.filename}`,
-            description: uploadComment || 'New deliverable uploaded for client sign-off.',
-            requested_from_user_id: proj.client_user_id
-          });
-        }
+        const proj = projects.find((p) => p.id === selectedProjectId);
+        await approvalsApi.create({
+          project_id: selectedProjectId,
+          file_id: uploaded.id,
+          title: `Verification Request: ${uploaded.filename}`,
+          description: uploadComment || 'New deliverable uploaded for client/admin sign-off.',
+          requested_by_user_id: user?.id || 'usr_dev',
+          requested_by_name: user?.name ? `${user.name} (${user.role})` : 'Aarav Sharma (Developer)',
+          requested_by_role: user?.role || 'TEAM_MEMBER',
+          target_recipient: 'EVERYONE',
+          requested_from_user_id: proj?.client_user_id || 'usr_client',
+        });
       }
 
       setShowUploadModal(false);
@@ -191,25 +193,49 @@ export const FilesPage: React.FC<FilesPageProps> = ({ projectId }) => {
                 </span>
               </div>
 
-              <div className="flex items-center justify-between border-t border-slate-200/80 pt-2.5 text-[11px]">
+              <div className="flex items-center justify-between border-t border-slate-200/80 dark:border-slate-800 pt-2.5 text-[11px]">
                 <button
                   onClick={() => {
                     setSelectedFileForVer(file);
                     setShowVersionModal(true);
                   }}
-                  className="text-slate-600 hover:text-slate-900 flex items-center gap-1 font-bold"
+                  className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white flex items-center gap-1 font-bold"
                 >
-                  <History className="w-3.5 h-3.5" /> Version History ({file.versions?.length || 1})
+                  <History className="w-3.5 h-3.5" /> Versions ({file.versions?.length || 1})
                 </button>
 
-                <a
-                  href={file.storage_url}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-indigo-600 hover:underline flex items-center gap-1 font-extrabold"
-                >
-                  <Download className="w-3.5 h-3.5" /> Download
-                </a>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={async () => {
+                      const proj = projects.find((p) => p.id === selectedProjectId);
+                      await approvalsApi.create({
+                        project_id: selectedProjectId,
+                        file_id: file.id,
+                        title: `Verification Request: ${file.filename}`,
+                        description: `Developer request for verification of deliverable ${file.filename}`,
+                        requested_by_user_id: user?.id || 'usr_dev',
+                        requested_by_name: user?.name ? `${user.name} (${user.role})` : 'Aarav Sharma (Developer)',
+                        requested_by_role: user?.role || 'TEAM_MEMBER',
+                        target_recipient: 'EVERYONE',
+                        requested_from_user_id: proj?.client_user_id || 'usr_client',
+                      });
+                      alert(`Verification request sent for ${file.filename}!`);
+                      loadFiles(selectedProjectId);
+                    }}
+                    className="px-2 py-1 bg-amber-100 hover:bg-amber-200 text-amber-900 dark:bg-amber-950 dark:text-amber-300 rounded-lg text-[10px] font-black transition-all"
+                  >
+                    + Request Verification
+                  </button>
+
+                  <a
+                    href={file.storage_url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-indigo-600 dark:text-sky-400 hover:underline flex items-center gap-1 font-extrabold"
+                  >
+                    <Download className="w-3.5 h-3.5" /> Download
+                  </a>
+                </div>
               </div>
             </div>
           ))}

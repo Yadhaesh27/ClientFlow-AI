@@ -686,24 +686,43 @@ export const filesApi = {
   },
 };
 
+const INITIAL_APPROVALS: Approval[] = [
+  {
+    id: 'app_1',
+    project_id: 'proj_1',
+    file_id: 'file_1',
+    title: 'Approve Homepage Design Wireframe v2',
+    description: 'Please review the updated hero palette and responsive layout.',
+    status: 'PENDING',
+    requested_by_name: 'Aarav Sharma (Developer)',
+    requested_by_role: 'TEAM_MEMBER',
+    target_recipient: 'CLIENT',
+    requested_from_user_id: 'usr_client',
+    created_at: new Date().toISOString(),
+  },
+  {
+    id: 'app_2',
+    project_id: 'proj_1',
+    file_id: 'file_1',
+    title: 'Backend API Security & Token Refresh Verification',
+    description: 'Developer requested code verification for JWT token rotation mechanism.',
+    status: 'PENDING',
+    requested_by_name: 'Aarav Sharma (Developer)',
+    requested_by_role: 'TEAM_MEMBER',
+    target_recipient: 'EVERYONE',
+    requested_from_user_id: 'usr_admin',
+    created_at: new Date(Date.now() - 3600000).toISOString(),
+  },
+];
+
 export const approvalsApi = {
   list: async (projectId: string): Promise<Approval[]> => {
     try {
       const res = await api.get(`/api/projects/${projectId}/approvals`);
       return res.data;
     } catch (err) {
-      return [
-        {
-          id: 'app_1',
-          project_id: projectId,
-          file_id: 'file_1',
-          title: 'Approve Homepage Design Wireframe v2',
-          description: 'Please review the updated hero palette and responsive layout.',
-          status: 'PENDING',
-          requested_from_user_id: 'usr_client',
-          created_at: new Date().toISOString(),
-        },
-      ];
+      const list = getLocalData<Approval[]>('clientflow_approvals', INITIAL_APPROVALS);
+      return list.filter((a) => a.project_id === projectId);
     }
   },
   create: async (data: Partial<Approval>): Promise<Approval> => {
@@ -711,16 +730,24 @@ export const approvalsApi = {
       const res = await api.post('/api/approvals', data);
       return res.data;
     } catch (err) {
-      return {
+      const current = getLocalData<Approval[]>('clientflow_approvals', INITIAL_APPROVALS);
+      const newApproval: Approval = {
         id: `app_${Date.now()}`,
         project_id: data.project_id || 'proj_1',
-        file_id: data.file_id || 'file_1',
-        title: data.title || 'New Approval Request',
+        file_id: data.file_id,
+        title: data.title || 'New Verification / Approval Request',
         description: data.description || '',
         status: 'PENDING',
-        requested_from_user_id: 'usr_client',
+        requested_by_user_id: data.requested_by_user_id || 'usr_dev',
+        requested_by_name: data.requested_by_name || 'Aarav Sharma (Developer)',
+        requested_by_role: data.requested_by_role || 'TEAM_MEMBER',
+        target_recipient: data.target_recipient || 'EVERYONE',
+        requested_from_user_id: data.requested_from_user_id || 'usr_client',
         created_at: new Date().toISOString(),
       };
+      const updated = [newApproval, ...current];
+      setLocalData('clientflow_approvals', updated);
+      return newApproval;
     }
   },
   approve: async (approvalId: string, feedback?: string): Promise<Approval> => {
@@ -728,16 +755,19 @@ export const approvalsApi = {
       const res = await api.post(`/api/approvals/${approvalId}/approve`, { status: 'APPROVED', feedback });
       return res.data;
     } catch (err) {
-      return {
-        id: approvalId,
-        project_id: 'proj_1',
-        file_id: 'file_1',
-        title: 'Approve Homepage Design Wireframe v2',
-        status: 'APPROVED',
-        requested_from_user_id: 'usr_client',
-        feedback: feedback || 'Approved cleanly!',
-        created_at: new Date().toISOString(),
-      };
+      const current = getLocalData<Approval[]>('clientflow_approvals', INITIAL_APPROVALS);
+      const updated = current.map((a) =>
+        a.id === approvalId
+          ? {
+              ...a,
+              status: 'APPROVED' as const,
+              feedback: feedback || 'Approved and verified cleanly!',
+              decided_at: new Date().toISOString(),
+            }
+          : a
+      );
+      setLocalData('clientflow_approvals', updated);
+      return updated.find((a) => a.id === approvalId)!;
     }
   },
   requestChanges: async (approvalId: string, feedback: string): Promise<Approval> => {
@@ -745,16 +775,19 @@ export const approvalsApi = {
       const res = await api.post(`/api/approvals/${approvalId}/request-changes`, { status: 'CHANGES_REQUESTED', feedback });
       return res.data;
     } catch (err) {
-      return {
-        id: approvalId,
-        project_id: 'proj_1',
-        file_id: 'file_1',
-        title: 'Approve Homepage Design Wireframe v2',
-        status: 'CHANGES_REQUESTED',
-        requested_from_user_id: 'usr_client',
-        feedback,
-        created_at: new Date().toISOString(),
-      };
+      const current = getLocalData<Approval[]>('clientflow_approvals', INITIAL_APPROVALS);
+      const updated = current.map((a) =>
+        a.id === approvalId
+          ? {
+              ...a,
+              status: 'CHANGES_REQUESTED' as const,
+              feedback: feedback || 'Revisions needed.',
+              decided_at: new Date().toISOString(),
+            }
+          : a
+      );
+      setLocalData('clientflow_approvals', updated);
+      return updated.find((a) => a.id === approvalId)!;
     }
   },
   getActionCenter: async (): Promise<Approval[]> => {
@@ -762,18 +795,8 @@ export const approvalsApi = {
       const res = await api.get('/api/action-center');
       return res.data;
     } catch (err) {
-      return [
-        {
-          id: 'app_1',
-          project_id: 'proj_1',
-          file_id: 'file_1',
-          title: 'Mobile App Checkout Flow UI',
-          description: 'Client review required for checkout payment options.',
-          status: 'PENDING',
-          requested_from_user_id: 'usr_client',
-          created_at: new Date().toISOString(),
-        },
-      ];
+      const list = getLocalData<Approval[]>('clientflow_approvals', INITIAL_APPROVALS);
+      return list.filter((a) => a.status === 'PENDING');
     }
   },
 };

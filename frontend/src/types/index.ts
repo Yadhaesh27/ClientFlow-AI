@@ -107,6 +107,10 @@ export interface Approval {
   title: string;
   description?: string;
   status: 'PENDING' | 'APPROVED' | 'CHANGES_REQUESTED';
+  requested_by_user_id?: string;
+  requested_by_name?: string;
+  requested_by_role?: string;
+  target_recipient?: 'EVERYONE' | 'ADMIN' | 'PROJECT_MANAGER' | 'CLIENT' | string;
   requested_from_user_id: string;
   decided_by_user_id?: string;
   feedback?: string;
