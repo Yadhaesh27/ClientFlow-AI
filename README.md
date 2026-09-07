@@ -1,6 +1,50 @@
 # 🚀 ClientFlow AI - Enterprise Client Portal & Team Workspace Suite
 
-ClientFlow AI is a modern, high-speed multi-tenant client collaboration portal and project management workspace for agencies, software teams, consultancies, and enterprise clients. It features **Real-Time Gemini AI SSE Token Streaming**, an **AI Command Center Hub** (Scope Creep Detector, Sentiment Radar, Smart Task Assigner), **Dual Company & Client Login Portals**, 1-click deliverable sign-offs with versioning (v1, v2, v3), Kanban task tracking, deterministic project health scoring, and publication-grade executive PDF reporting.
+ClientFlow AI is a state-of-the-art multi-tenant client collaboration portal and agile engineering workspace built for agencies, software teams, consultancies, and enterprise clients. It unifies **Real-Time Gemini AI SSE Token Streaming**, an **AI Command Center Hub** (Scope Creep Detector, Sentiment Radar, Smart Task Assigner), **Dual Company & Client Login Portals**, 1-click deliverable sign-offs with versioning (v1, v2, v3), Kanban sprint tracking, deterministic project health telemetry, and publication-grade executive PDF reporting.
+
+---
+
+## 📸 Complete Platform Visual Showcase
+
+### 1. Dual Sign-In Portals & Navigation (`/login`)
+| Company & Agency Workspace Login | Enterprise Client Portal Sign-In |
+| :---: | :---: |
+| ![Company Portal Login](docs/screenshots/01_login_company_portal.png) | ![Client Portal Login](docs/screenshots/02_login_client_portal.png) |
+
+---
+
+### 2. Agency Overview Dashboard & Floating Real-Time AI Copilot (`/`)
+| Executive Dashboard & 8 Analytics Charts | Global Floating SSE AI Copilot Widget |
+| :---: | :---: |
+| ![Dashboard Overview](docs/screenshots/03_dashboard_kpis_charts.png) | ![AI Copilot Widget](docs/screenshots/05_ai_copilot_widget.png) |
+
+---
+
+### 3. AI Command Center Hub & Intelligence Assistant (`/ai-assistant`)
+| AI Command Center (Scope Creep & Sentiment Radar) | Real-Time AI Copilot Q&A |
+| :---: | :---: |
+| ![AI Command Center](docs/screenshots/04_ai_command_center_hub.png) | ![AI Intelligence Assistant](docs/screenshots/11_ai_copilot_assistant.png) |
+
+---
+
+### 4. Active Project Workspaces & Sprint Kanban Board (`/projects` & `/kanban`)
+| 5 Core Project Workspaces | Sprint Kanban Swimlanes (25 Tasks) |
+| :---: | :---: |
+| ![Projects Workspace](docs/screenshots/06_projects_workspace.png) | ![Kanban Sprint Board](docs/screenshots/07_kanban_sprint_board.png) |
+
+---
+
+### 5. Client Directory, Team Members & Collaboration (`/clients`, `/team`, `/messages`)
+| Client Directory & Sentiment Radar | Agency Team Directory (5 Engineers) |
+| :---: | :---: |
+| ![Clients Directory](docs/screenshots/08_client_sentiment_radar.png) | ![Team Directory](docs/screenshots/13_team_directory.png) |
+
+---
+
+### 6. Deliverable Sign-Off Queue & Theme Customization (`/approvals` & Dark Mode)
+| 1-Click Deliverable Approval Queue | Dark Mode & Accent Theme Customizer |
+| :---: | :---: |
+| ![Approval Queue](docs/screenshots/10_approval_signoff_queue.png) | ![Dark Mode Customizer](docs/screenshots/12_dark_mode_theme_customizer.png) |
 
 ---
 
@@ -13,40 +57,27 @@ ClientFlow AI is a modern, high-speed multi-tenant client collaboration portal a
 | **Project Lead (PM)** | `manager@clientflow.demo` | `Demo@123` | Project health telemetry, sprint task creation, deliverable versioning |
 | **Senior Developer** | `developer@clientflow.demo` | `Demo@123` | Kanban task moves, code deliverable uploads, story point estimation |
 
-*Note: You can also use the Quick Demo Launch Buttons on the Login Modal to log in instantly!*
-
 ---
 
-## 🌟 Key Features & AI Capabilities
+## 🌟 Major Features & AI Capabilities
 
-### 1. ✨ Real-Time Gemini AI Copilot (Server-Sent Events Streaming)
-- **Global Floating Copilot Widget (`AiCopilotWidget.tsx`)**: Available across all pages for instant workspace assistance with real-time SSE token-by-token typewriter streaming.
-- **Context-Aware Project Evaluation**: Answers queries on project health, budget utilization, pending deliverables, and sprint velocity.
+1. **✨ Real-Time Gemini AI Copilot (Server-Sent Events Streaming)**:
+   - Floating glassmorphism AI Copilot widget on all pages with typewriter token streaming over SSE (`POST /api/ai/projects/{id}/chat/stream`).
 
-### 2. 🤖 AI Command Center Hub (`AiAssistantPage.tsx`)
-- **Executive Summary & Multi-Tone Update Drafter**: Generate tailored progress updates in *Executive*, *Friendly*, or *Urgent* tones.
-- **Scope Creep & Out-of-Scope Detector**: Scans client feedback text to detect out-of-scope feature requests, calculating extra developer hours and financial cost impact.
-- **Client Sentiment & Risk Radar**: Analyzes approval review lag, communication friction, and client satisfaction metrics.
-- **Smart Task Auto-Assigner**: Workload-aware engineer matcher suggesting the optimal developer based on skill set and current capacity.
-- **Real-Time Copilot Q&A**: SSE token streaming interface bound to live project telemetry.
+2. **🤖 AI Command Center Hub (`/ai-assistant`)**:
+   - **Executive Summary & Multi-Tone Update Drafter**: Instant draft status emails in *Executive*, *Friendly*, or *Urgent* tones.
+   - **Scope Creep & Out-of-Scope Detector**: Analyzes client feedback to detect out-of-scope feature requests, calculating extra developer hours and financial cost impact.
+   - **Client Sentiment & Risk Radar**: Analyzes approval review lag, communication friction, and client satisfaction metrics.
+   - **Smart Task Auto-Assigner**: Workload-aware engineer matcher suggesting the optimal developer based on capacity and skill tags.
 
-### 3. 🔑 Dual Login Portals & Sign In Navigation (`LoginPage.tsx`)
-- **🏢 Company & Agency Login**: Primary workspace sign-in for Admins, PMs, and Developers to manage engineering sprints.
-- **💼 Client Portal Login**: Dedicated portal sign-in for client stakeholders with quick company cards (*Northstar Tech*, *Vertex Studio*, *Quantum Financial*, *Horizon Media*, *Aura Health*).
-- **Top Navbar `Sign In` Button**: Clean, unified authentication entry point.
+3. **🔑 Dual Login Portals (`/login`)**:
+   - Distinct **Company Workspace** and **Client Portal** logins with top navbar `Sign In` button.
 
-### 4. 📊 Structured 5-Set Workspace Dataset
-- **5 Core Projects**: *NextGen AI E-Commerce*, *Mobile Banking & Wealth*, *Cloud Media Streaming*, *Telehealth Patient Care*, *Brand Design Suite*.
-- **5 Client Companies**: *Northstar Tech Solutions*, *Vertex Digital Studio*, *Quantum Financial Group*, *Horizon Media Networks*, *Aura Health Systems*.
-- **5 Agency Developers**: *Aarav Sharma*, *Priya Patel*, *Marcus Vance*, *Alex Rivera*, *Sarah Jenkins*.
-- **5 Tasks per Project (25 Total Tasks)**: Distributed across Kanban swimlanes (*Backlog*, *To Do*, *In Progress*, *Review*, *Done*).
-- **5 Data Points per Dashboard Chart**: 5-point datasets across all 8 analytics visualizations.
+4. **📊 Structured 5-Set Workspace Dataset**:
+   - 5 Core Projects, 5 Client Companies, 5 Agency Developers, 25 Sprint Tasks, and 5-item chart data across all 8 analytics visualizations.
 
-### 5. 📄 Executive PDF Reports & Audit Documents
-- **Executive Completion Certificate**: Deterministic project health breakdown & velocity metrics.
-- **Sprint Tasks Audit Matrix**: Issue types, story points, priority tags, and engineer assignments.
-- **Client Deliverable Sign-Off Certificate**: Timestamped approvals and client revision notes.
-- **1-Click PDF Export & Print**: `@media print` styling for publication-grade PDF exports.
+5. **📄 Executive PDF Reports & Audit Documents (`/reports`)**:
+   - Publication-grade `@media print` styling for 1-click PDF export of completion certificates, task audit matrices, deliverable approvals, and workload capacity.
 
 ---
 
@@ -73,13 +104,6 @@ cd frontend
 npm run dev
 ```
 Open **http://127.0.0.1:5173**
-
----
-
-## 🌐 Production Deployment
-
-- **Vercel**: Set root directory to `frontend`, build command `npm run build`, output directory `dist`.
-- **Render / Railway**: Set root directory to `backend`, start command `python -m uvicorn app.main:app --host 0.0.0.0 --port $PORT`.
 
 ---
 
