@@ -42,7 +42,7 @@ export const LoginPage: React.FC = () => {
   const { theme, toggleTheme, accent, setAccent } = useTheme();
 
   // Active Login Portal View (Agency vs Client Portal)
-  const [portalType, setPortalType] = useState<'CLIENT' | 'AGENCY'>('CLIENT');
+  const [portalType, setPortalType] = useState<'AGENCY' | 'CLIENT'>('AGENCY');
 
   // Pop-up Login Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -70,42 +70,52 @@ export const LoginPage: React.FC = () => {
     {
       id: 'usr_client_1',
       name: 'David Vance',
-      company: 'Northstar Labs',
+      company: 'Northstar Tech Solutions',
       role: 'VP of Product',
       email: 'client@clientflow.demo',
       avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150',
-      activeProjects: 3,
-      pendingApprovals: 2,
+      activeProjects: 1,
+      pendingApprovals: 1,
     },
     {
       id: 'usr_client_2',
       name: 'Sarah Lin',
-      company: 'Vertex Studio',
+      company: 'Vertex Digital Studio',
       role: 'Creative Director',
-      email: 'client@clientflow.demo',
+      email: 'sarah@vertex.demo',
       avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150',
-      activeProjects: 2,
+      activeProjects: 1,
       pendingApprovals: 1,
     },
     {
       id: 'usr_client_3',
       name: 'Robert Sterling',
-      company: 'Quantum Financial',
+      company: 'Quantum Financial Group',
       role: 'Head of Ops',
-      email: 'client@clientflow.demo',
+      email: 'robert@quantum.demo',
       avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150',
-      activeProjects: 4,
-      pendingApprovals: 3,
+      activeProjects: 1,
+      pendingApprovals: 1,
     },
     {
       id: 'usr_client_4',
       name: 'Emma Watson',
-      company: 'Horizon Media Group',
+      company: 'Horizon Media Networks',
       role: 'Brand Manager',
-      email: 'client@clientflow.demo',
+      email: 'emma@horizon.demo',
       avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
-      activeProjects: 2,
-      pendingApprovals: 0,
+      activeProjects: 1,
+      pendingApprovals: 1,
+    },
+    {
+      id: 'usr_client_5',
+      name: 'Dr. Michael Chang',
+      company: 'Aura Health Systems',
+      role: 'Chief Medical Officer',
+      email: 'michael@aura.demo',
+      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
+      activeProjects: 1,
+      pendingApprovals: 1,
     },
   ];
 
@@ -312,13 +322,13 @@ export const LoginPage: React.FC = () => {
             {theme === 'light' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4 text-amber-300" />}
           </button>
 
-          {/* Client Sign In Button */}
+          {/* Sign In Button */}
           <button
             onClick={() => { setIsModalOpen(true); setError(null); }}
-            className="px-5 py-2.5 rounded-full bg-teal-600 hover:bg-teal-700 dark:bg-teal-500 dark:hover:bg-teal-600 text-white text-xs font-medium shadow-md shadow-teal-500/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center gap-2 cursor-pointer"
+            className="px-5 py-2.5 rounded-full bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-500 dark:hover:bg-indigo-600 text-white text-xs font-semibold shadow-md shadow-indigo-500/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center gap-2 cursor-pointer"
           >
             <LogIn className="w-3.5 h-3.5" />
-            <span>Client Sign In</span>
+            <span>Sign In</span>
           </button>
         </div>
       </header>
@@ -329,18 +339,6 @@ export const LoginPage: React.FC = () => {
         {/* Portal Access Selector Tabs */}
         <div className="inline-flex items-center p-1.5 rounded-full bg-slate-200/70 dark:bg-slate-800/80 border border-slate-300/60 dark:border-slate-700 backdrop-blur-md shadow-sm">
           <button
-            onClick={() => setPortalType('CLIENT')}
-            className={`px-5 py-2 rounded-full text-xs font-semibold transition-all flex items-center gap-2 cursor-pointer ${
-              portalType === 'CLIENT'
-                ? 'bg-white dark:bg-slate-900 text-teal-700 dark:text-teal-300 shadow-md scale-105'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
-            }`}
-          >
-            <Briefcase className="w-3.5 h-3.5 text-teal-500" />
-            <span>Client Portal Access</span>
-          </button>
-
-          <button
             onClick={() => setPortalType('AGENCY')}
             className={`px-5 py-2 rounded-full text-xs font-semibold transition-all flex items-center gap-2 cursor-pointer ${
               portalType === 'AGENCY'
@@ -349,14 +347,26 @@ export const LoginPage: React.FC = () => {
             }`}
           >
             <Building2 className="w-3.5 h-3.5 text-indigo-500" />
-            <span>Agency & Dev Workspace</span>
+            <span>Company & Agency Login</span>
+          </button>
+
+          <button
+            onClick={() => setPortalType('CLIENT')}
+            className={`px-5 py-2 rounded-full text-xs font-semibold transition-all flex items-center gap-2 cursor-pointer ${
+              portalType === 'CLIENT'
+                ? 'bg-white dark:bg-slate-900 text-teal-700 dark:text-teal-300 shadow-md scale-105'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+            }`}
+          >
+            <Briefcase className="w-3.5 h-3.5 text-teal-500" />
+            <span>Client Portal Login</span>
           </button>
         </div>
 
         {/* Hero Title & Subtitle */}
         <div className="space-y-3 max-w-2xl mx-auto">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-teal-50 dark:bg-teal-950/70 border border-teal-100 dark:border-teal-900/70 text-xs font-medium text-teal-700 dark:text-teal-300 shadow-xs">
-            <Activity className="w-3.5 h-3.5 text-teal-500" />
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-50 dark:bg-indigo-950/70 border border-indigo-100 dark:border-indigo-900/70 text-xs font-medium text-indigo-700 dark:text-sky-300 shadow-xs">
+            <Activity className="w-3.5 h-3.5 text-indigo-500" />
             <span>System Status: 🟢 99.99% Uptime • SOC2 Type II Certified</span>
           </div>
 
@@ -364,14 +374,14 @@ export const LoginPage: React.FC = () => {
             {portalType === 'CLIENT' ? (
               <>Enterprise <span className="text-teal-600 dark:text-teal-400 font-normal">Client Portal</span></>
             ) : (
-              <>CLIENTFLOW <span className="text-indigo-600 dark:text-sky-400 font-normal">AI Workspace</span></>
+              <>CLIENTFLOW <span className="text-indigo-600 dark:text-sky-400 font-normal">Company Workspace</span></>
             )}
           </h1>
 
           <p className="text-sm text-slate-600 dark:text-slate-300 font-normal leading-relaxed">
             {portalType === 'CLIENT' 
-              ? 'Secure client access for reviewing deliverables, 1-click approvals, milestone tracking, and real-time project health telemetry.'
-              : 'Collaborative agency suite for engineering teams, sprint management, Gemini AI revision extraction, and executive client reporting.'
+              ? 'Secure client portal for reviewing deliverables, 1-click approvals, milestone tracking, and real-time project health telemetry.'
+              : 'Collaborative company suite for engineering teams, sprint management, Gemini AI revision extraction, and executive client reporting.'
             }
           </p>
         </div>
@@ -391,7 +401,7 @@ export const LoginPage: React.FC = () => {
               {clientAccounts.map((account) => (
                 <div
                   key={account.id}
-                  onClick={() => { setIsModalOpen(true); handleDemoSelect('CLIENT', account.email); }}
+                  onClick={() => { setPortalType('CLIENT'); setIsModalOpen(true); handleDemoSelect('CLIENT', account.email); }}
                   className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm hover:shadow-md hover:border-teal-400 dark:hover:border-teal-500 transition-all cursor-pointer group space-y-3"
                 >
                   <div className="flex items-center gap-3">
@@ -512,14 +522,24 @@ export const LoginPage: React.FC = () => {
 
         </div>
 
-        {/* Hero CTA & Quick Role Launch Pills */}
+        {/* Hero Dual Sign-In Options */}
         <div className="pt-2 space-y-4">
-          <div className="flex items-center justify-center gap-4">
+          <div className="flex flex-wrap items-center justify-center gap-4">
             <button
-              onClick={() => { setIsModalOpen(true); setError(null); }}
-              className="px-8 py-3.5 rounded-full bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium shadow-lg shadow-teal-500/25 hover:shadow-teal-500/40 hover:scale-105 active:scale-95 transition-all flex items-center gap-2.5 cursor-pointer"
+              onClick={() => { setPortalType('AGENCY'); setIsModalOpen(true); setError(null); }}
+              className="px-8 py-3.5 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 hover:scale-105 active:scale-95 transition-all flex items-center gap-2.5 cursor-pointer"
             >
-              <span>Launch Client Portal</span>
+              <Building2 className="w-4 h-4" />
+              <span>Company Sign In</span>
+              <ArrowRight className="w-4 h-4" />
+            </button>
+
+            <button
+              onClick={() => { setPortalType('CLIENT'); setIsModalOpen(true); setError(null); }}
+              className="px-8 py-3.5 rounded-full bg-teal-600 hover:bg-teal-700 text-white text-sm font-semibold shadow-lg shadow-teal-500/25 hover:shadow-teal-500/40 hover:scale-105 active:scale-95 transition-all flex items-center gap-2.5 cursor-pointer"
+            >
+              <Briefcase className="w-4 h-4" />
+              <span>Client Portal Sign In</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>
@@ -594,11 +614,11 @@ export const LoginPage: React.FC = () => {
             <div className="flex items-start justify-between">
               <div>
                 <h2 className="text-xl font-semibold text-slate-800 dark:text-slate-100 flex items-center gap-2">
-                  <ShieldCheck className="w-5 h-5 text-teal-500" />
-                  <span>{isRegistering ? 'Create Client Workspace' : 'Client & Team Portal Sign In'}</span>
+                  <ShieldCheck className="w-5 h-5 text-indigo-500" />
+                  <span>{isRegistering ? 'Create Workspace' : portalType === 'CLIENT' ? 'Client Portal Sign In' : 'Company & Agency Sign In'}</span>
                 </h2>
                 <p className="text-xs text-slate-500 dark:text-slate-400 font-normal mt-0.5">
-                  {isRegistering ? 'Setup your organization' : 'Enter your credentials or use quick role launch'}
+                  {isRegistering ? 'Setup your organization' : 'Select your portal and enter your credentials'}
                 </p>
               </div>
 
@@ -609,6 +629,36 @@ export const LoginPage: React.FC = () => {
                 <X className="w-4 h-4" />
               </button>
             </div>
+
+            {/* Portal Switcher Tabs in Modal */}
+            {!isRegistering && (
+              <div className="flex items-center p-1 bg-slate-200/80 dark:bg-slate-800 rounded-2xl text-xs font-bold border border-slate-300/60 dark:border-slate-700">
+                <button
+                  type="button"
+                  onClick={() => setPortalType('AGENCY')}
+                  className={`flex-1 py-2 rounded-xl transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer ${
+                    portalType === 'AGENCY'
+                      ? 'bg-white dark:bg-slate-900 text-indigo-700 dark:text-sky-300 shadow-sm font-bold'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                  }`}
+                >
+                  <Building2 className="w-3.5 h-3.5 text-indigo-500" />
+                  <span>Company Sign In</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setPortalType('CLIENT')}
+                  className={`flex-1 py-2 rounded-xl transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer ${
+                    portalType === 'CLIENT'
+                      ? 'bg-white dark:bg-slate-900 text-teal-700 dark:text-teal-300 shadow-sm font-bold'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
+                  }`}
+                >
+                  <Briefcase className="w-3.5 h-3.5 text-teal-500" />
+                  <span>Client Portal Sign In</span>
+                </button>
+              </div>
+            )}
 
             {/* Modal Sign-in Method Tabs */}
             {!isRegistering && (

@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from sqlalchemy.orm import Session
 from app.core.database import engine, Base, SessionLocal
 from app.core.security import get_password_hash
@@ -9,187 +9,215 @@ from app.models import (
 )
 
 def seed_database():
-    # Drop all and recreate to update SQLite schema
+    # Drop all tables and recreate schema
     Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
     
     db: Session = SessionLocal()
 
-    print("Seeding database with ClientFlow AI demo data...")
+    print("Seeding 5 structured sets of Projects, Clients, Developers, Tasks, Files & Approvals...")
 
     # 1. Organization
     org_id = str(uuid.uuid4())
     org = Organization(
         id=org_id,
-        name="ClientFlow AI Agency Workspace",
-        slug="clientflow-agency"
+        name="ClientFlow AI Workspace",
+        slug="clientflow-workspace"
     )
     db.add(org)
 
-    # 2. Users (Admin, Client, Team Developer with exact requested credentials)
-    admin_id = str(uuid.uuid4())
-    manager_id = str(uuid.uuid4())
-    dev_id = str(uuid.uuid4())
-    client_id = str(uuid.uuid4())
-
     hashed_pw = get_password_hash("Demo@123")
 
+    # 2. 5 Clients
+    client1 = User(
+        id="usr_client_1", organization_id=org_id, name="David Vance (Northstar)",
+        email="client@clientflow.demo", password_hash=hashed_pw, role="CLIENT",
+        avatar_url="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150"
+    )
+    client2 = User(
+        id="usr_client_2", organization_id=org_id, name="Sarah Lin (Vertex)",
+        email="sarah@vertex.demo", password_hash=hashed_pw, role="CLIENT",
+        avatar_url="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150"
+    )
+    client3 = User(
+        id="usr_client_3", organization_id=org_id, name="Robert Sterling (Quantum)",
+        email="robert@quantum.demo", password_hash=hashed_pw, role="CLIENT",
+        avatar_url="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150"
+    )
+    client4 = User(
+        id="usr_client_4", organization_id=org_id, name="Emma Watson (Horizon)",
+        email="emma@horizon.demo", password_hash=hashed_pw, role="CLIENT",
+        avatar_url="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150"
+    )
+    client5 = User(
+        id="usr_client_5", organization_id=org_id, name="Dr. Michael Chang (Aura)",
+        email="michael@aura.demo", password_hash=hashed_pw, role="CLIENT",
+        avatar_url="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150"
+    )
+
+    # 3. 5 Developers & Managers (Core Agency Team)
     admin = User(
-        id=admin_id, organization_id=org_id, name="Sarah Jenkins (Admin)",
+        id="usr_admin", organization_id=org_id, name="Sarah Jenkins (Admin)",
         email="admin@clientflow.demo", password_hash=hashed_pw, role="ADMIN",
         avatar_url="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150"
     )
     manager = User(
-        id=manager_id, organization_id=org_id, name="Alex Rivera (PM)",
+        id="usr_pm", organization_id=org_id, name="Alex Rivera (PM)",
         email="manager@clientflow.demo", password_hash=hashed_pw, role="PROJECT_MANAGER",
         avatar_url="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150"
     )
-    dev = User(
-        id=dev_id, organization_id=org_id, name="Aarav Sharma (Senior Dev)",
+    dev1 = User(
+        id="usr_dev_1", organization_id=org_id, name="Aarav Sharma (Lead Dev)",
         email="developer@clientflow.demo", password_hash=hashed_pw, role="TEAM_MEMBER",
         avatar_url="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150"
     )
-    client = User(
-        id=client_id, organization_id=org_id, name="David Vance (Northstar Labs)",
-        email="client@clientflow.demo", password_hash=hashed_pw, role="CLIENT",
+    dev2 = User(
+        id="usr_dev_2", organization_id=org_id, name="Priya Patel (Senior Frontend)",
+        email="priya@clientflow.demo", password_hash=hashed_pw, role="TEAM_MEMBER",
+        avatar_url="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150"
+    )
+    dev3 = User(
+        id="usr_dev_3", organization_id=org_id, name="Marcus Vance (Backend Lead)",
+        email="marcus@clientflow.demo", password_hash=hashed_pw, role="TEAM_MEMBER",
         avatar_url="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150"
     )
 
-    db.add_all([admin, manager, dev, client])
+    db.add_all([admin, manager, dev1, dev2, dev3, client1, client2, client3, client4, client5])
+    db.commit()
 
-    # 3. Projects with Keys & Client Assignments
-    now = datetime.now(timezone.utc)
-    future_date = (now + timedelta(days=14)).strftime("%Y-%m-%d")
-    past_date = (now - timedelta(days=5)).strftime("%Y-%m-%d")
-
-    proj1_id = str(uuid.uuid4())
-    proj1 = Project(
-        id=proj1_id,
-        organization_id=org_id,
-        client_user_id=client_id,
-        key_prefix="WEB",
-        name="E-Commerce Platform Overhaul",
-        description="Complete website redesign and checkout optimization for Northstar Labs.",
-        status="ACTIVE",
-        progress=82,
-        health_score=87,
-        start_date=(now - timedelta(days=20)).strftime("%Y-%m-%d"),
-        deadline=future_date,
-        budget=245000.0
-    )
-
-    proj2_id = str(uuid.uuid4())
-    proj2 = Project(
-        id=proj2_id,
-        organization_id=org_id,
-        client_user_id=client_id,
-        key_prefix="MOB",
-        name="Mobile Banking UI Application",
-        description="iOS and Android cross-platform client portal app development for Vertex Studio.",
-        status="ACTIVE",
-        progress=61,
-        health_score=68,
-        start_date=(now - timedelta(days=30)).strftime("%Y-%m-%d"),
-        deadline=past_date,
-        budget=180000.0
-    )
-
-    proj3_id = str(uuid.uuid4())
-    proj3 = Project(
-        id=proj3_id,
-        organization_id=org_id,
-        client_user_id=client_id,
-        key_prefix="MKT",
-        name="Marketing Automation Portal",
-        description="Q4 Marketing dashboard, visual design deck, and automated email funnel.",
-        status="ACTIVE",
-        progress=94,
-        health_score=95,
-        start_date=(now - timedelta(days=10)).strftime("%Y-%m-%d"),
-        deadline=future_date,
-        budget=120000.0
-    )
-
-    db.add_all([proj1, proj2, proj3])
-
-    # Assign developers
-    db.add_all([
-        ProjectMember(id=str(uuid.uuid4()), project_id=proj1_id, user_id=dev_id, role_in_project="DEVELOPER"),
-        ProjectMember(id=str(uuid.uuid4()), project_id=proj1_id, user_id=manager_id, role_in_project="LEAD"),
-        ProjectMember(id=str(uuid.uuid4()), project_id=proj2_id, user_id=dev_id, role_in_project="DEVELOPER"),
-    ])
-
-    # 4. ClientFlow Tasks
-    t1 = Task(
-        id=str(uuid.uuid4()), project_id=proj1_id, assignee_id=dev_id, created_by=manager_id,
-        issue_key="WEB-101", issue_type="STORY", story_points=5,
-        title="Implement hero section responsive layout", description="Use modern grid system for desktop and mobile viewports.",
-        status="DONE", priority="HIGH", due_date=past_date
-    )
-    t2 = Task(
-        id=str(uuid.uuid4()), project_id=proj1_id, assignee_id=dev_id, created_by=manager_id,
-        issue_key="WEB-102", issue_type="TASK", story_points=3,
-        title="Setup Analytics Tracking and SEO Meta Tags", description="Add meta tags and tracking metrics.",
-        status="IN_PROGRESS", priority="MEDIUM", due_date=future_date
-    )
-    t3 = Task(
-        id=str(uuid.uuid4()), project_id=proj1_id, assignee_id=manager_id, created_by=admin_id,
-        issue_key="WEB-103", issue_type="STORY", story_points=8,
-        title="Client Sign-off on Homepage Deliverable", description="Awaiting client approval in the Action Center.",
-        status="REVIEW", priority="URGENT", due_date=future_date
-    )
-    t4 = Task(
-        id=str(uuid.uuid4()), project_id=proj1_id, assignee_id=dev_id, created_by=manager_id,
-        issue_key="WEB-104", issue_type="BUG", story_points=2,
-        title="Fix mobile line wrapping on Safari", description="Resolve flexbox clipping on mobile devices.",
-        status="TO_DO", priority="LOW", due_date=future_date
-    )
-    t5 = Task(
-        id=str(uuid.uuid4()), project_id=proj2_id, assignee_id=dev_id, created_by=manager_id,
-        issue_key="MOB-201", issue_type="BUG", story_points=5,
-        title="Fix push notification authentication payload", description="Resolve 401 error on notification gateway connection.",
-        status="IN_PROGRESS", priority="URGENT", due_date=past_date
-    )
-
-    db.add_all([t1, t2, t3, t4, t5])
-
-    # 5. File & Approvals
-    file1_id = str(uuid.uuid4())
-    file1 = File(
-        id=file1_id, project_id=proj1_id, uploaded_by=manager_id,
-        folder="Deliverables", filename="Homepage_Design_v4.png",
-        storage_url="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800",
-        mime_type="image/png", size_bytes=2450000, current_version=4,
-        approval_status="PENDING"
-    )
-    db.add(file1)
-
-    app1_id = str(uuid.uuid4())
-    app1 = Approval(
-        id=app1_id, project_id=proj1_id, file_id=file1_id,
-        title="Homepage Design v4 Deliverable Sign-off",
-        description="Please review the updated dark mode layout and client feedback revisions.",
-        status="PENDING", requested_from_user_id=client_id
-    )
-    db.add(app1)
-
-    # Activity logs
-    activities = [
-        ("PROJECT_CREATED", proj1_id, manager_id, "Project E-Commerce Platform Overhaul created"),
-        ("TASK_CREATED", proj1_id, manager_id, "Task WEB-101 created"),
-        ("TASK_STATUS_CHANGED", proj1_id, dev_id, "Task WEB-101 moved to DONE"),
-        ("TASK_CREATED", proj1_id, manager_id, "Task WEB-104 [BUG] created"),
+    # 4. 5 Projects
+    projects_data = [
+        {
+            "id": "proj_1", "name": "NextGen AI E-Commerce Platform", "key": "ECOMM",
+            "client_id": client1.id, "progress": 85, "health": 92, "budget": 120000.0,
+            "deadline": "2026-11-30", "desc": "High-throughput e-commerce platform with Gemini AI dynamic product recommendations and streaming search."
+        },
+        {
+            "id": "proj_2", "name": "Mobile Banking & Wealth App", "key": "BANK",
+            "client_id": client3.id, "progress": 60, "health": 88, "budget": 185000.0,
+            "deadline": "2026-12-15", "desc": "Biometric mobile banking portal featuring encrypted microservice API integration."
+        },
+        {
+            "id": "proj_3", "name": "Cloud Media Streaming Portal", "key": "STREAM",
+            "client_id": client4.id, "progress": 40, "health": 75, "budget": 95000.0,
+            "deadline": "2026-10-20", "desc": "Low-latency streaming video delivery network with real-time video transcoding."
+        },
+        {
+            "id": "proj_4", "name": "Telehealth Patient Care Dashboard", "key": "HEALTH",
+            "client_id": client5.id, "progress": 95, "health": 96, "budget": 140000.0,
+            "deadline": "2026-09-30", "desc": "HIPAA-compliant doctor consultation dashboard and patient record synchronization."
+        },
+        {
+            "id": "proj_5", "name": "Brand Design & Interactive UI Suite", "key": "BRAND",
+            "client_id": client2.id, "progress": 25, "health": 82, "budget": 65000.0,
+            "deadline": "2026-12-01", "desc": "Complete brand guidelines, dark mode design tokens, and vector icon suite."
+        },
     ]
-    for act, p_id, u_id, detail in activities:
-        db.add(ActivityLog(
-            id=str(uuid.uuid4()), organization_id=org_id, project_id=p_id,
-            user_id=u_id, action=act, entity_type="project", entity_id=p_id,
-            metadata_json=f'{{"detail": "{detail}"}}'
+
+    projects_list = []
+    for p_data in projects_data:
+        p = Project(
+            id=p_data["id"],
+            organization_id=org_id,
+            client_user_id=p_data["client_id"],
+            name=p_data["name"],
+            key_prefix=p_data["key"],
+            description=p_data["desc"],
+            status="ACTIVE",
+            progress=p_data["progress"],
+            health_score=p_data["health"],
+            budget=p_data["budget"],
+            start_date="2026-08-01",
+            deadline=p_data["deadline"]
+        )
+        projects_list.append(p)
+        db.add(p)
+
+    db.commit()
+
+    # 5. 5 Files (1 per project)
+    files_data = [
+        {"id": "file_1", "p_id": "proj_1", "name": "Ecommerce_Checkout_v2.png", "folder": "Deliverables", "url": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800", "ver": 2, "status": "PENDING"},
+        {"id": "file_2", "p_id": "proj_2", "name": "Banking_Security_Spec.pdf", "folder": "Docs", "url": "#", "ver": 1, "status": "APPROVED"},
+        {"id": "file_3", "p_id": "proj_3", "name": "Video_Player_v1.mp4", "folder": "Design", "url": "#", "ver": 1, "status": "CHANGES_REQUESTED"},
+        {"id": "file_4", "p_id": "proj_4", "name": "Patient_Portal_DesignSystem.fig", "folder": "Deliverables", "url": "#", "ver": 3, "status": "APPROVED"},
+        {"id": "file_5", "p_id": "proj_5", "name": "Brand_Guidelines_Package.zip", "folder": "General", "url": "#", "ver": 1, "status": "PENDING"},
+    ]
+
+    for f in files_data:
+        db.add(File(
+            id=f["id"], project_id=f["p_id"], uploaded_by=dev1.id, folder=f["folder"],
+            filename=f["name"], storage_url=f["url"], current_version=f["ver"], approval_status=f["status"]
         ))
+
+    # 6. 5 Approvals (1 per project)
+    approvals_data = [
+        {"id": "app_1", "p_id": "proj_1", "f_id": "file_1", "title": "Approve AI Checkout Flow Wireframe v2", "from": client1.id, "status": "PENDING"},
+        {"id": "app_2", "p_id": "proj_2", "f_id": "file_2", "title": "Approve Biometric Security Integration Spec", "from": client3.id, "status": "APPROVED"},
+        {"id": "app_3", "p_id": "proj_3", "f_id": "file_3", "title": "Review HLS Video Streaming Player Controls", "from": client4.id, "status": "CHANGES_REQUESTED"},
+        {"id": "app_4", "p_id": "proj_4", "f_id": "file_4", "title": "Approve HIPAA Telehealth Dashboard System", "from": client5.id, "status": "APPROVED"},
+        {"id": "app_5", "p_id": "proj_5", "f_id": "file_5", "title": "Review Vector Logo & Dark Mode Token Suite", "from": client2.id, "status": "PENDING"},
+    ]
+
+    for a in approvals_data:
+        db.add(Approval(
+            id=a["id"], project_id=a["p_id"], file_id=a["f_id"], title=a["title"],
+            description="Client verification requested for active sprint deliverable milestone.",
+            status=a["status"], requested_from_user_id=a["from"]
+        ))
+
+    # 7. 5 Tasks per Project (Total 25 Tasks)
+    statuses = ["TO_DO", "IN_PROGRESS", "REVIEW", "DONE", "BACKLOG"]
+    priorities = ["HIGH", "MEDIUM", "URGENT", "LOW", "MEDIUM"]
+    types = ["STORY", "BUG", "TASK", "STORY", "BUG"]
+    assignees = [dev1.id, dev2.id, dev3.id, dev1.id, dev2.id]
+
+    task_idx = 1
+    for p in projects_list:
+        for i in range(5):
+            t = Task(
+                id=f"task_{task_idx}",
+                project_id=p.id,
+                assignee_id=assignees[i],
+                created_by=manager.id,
+                issue_key=f"{p.key_prefix}-{100 + i + 1}",
+                issue_type=types[i],
+                story_points=(i + 1) * 2,
+                title=f"{p.name} - Milestone Task #{i+1}",
+                description=f"Detailed implementation requirements for module #{i+1} in {p.name}.",
+                status=statuses[i],
+                priority=priorities[i],
+                due_date="2026-10-15"
+            )
+            db.add(t)
+            task_idx += 1
+
+    # 8. 5 Activity Logs per Project
+    for p in projects_list:
+        for i in range(5):
+            db.add(ActivityLog(
+                id=str(uuid.uuid4()),
+                organization_id=org_id,
+                project_id=p.id,
+                user_id=dev1.id if i % 2 == 0 else manager.id,
+                action=f"Updated sprint task #{i+1} status in {p.name}",
+                entity_type="TASK",
+                entity_id=f"task_{i+1}"
+            ))
+
+    # 9. 5 Messages per Project
+    for p in projects_list:
+        for i in range(5):
+            db.add(Message(
+                id=str(uuid.uuid4()),
+                project_id=p.id,
+                sender_id=p.client_user_id if i % 2 == 0 else dev1.id,
+                message=f"Sprint update #{i+1}: Feature build is progressing smoothly on schedule.",
+            ))
 
     db.commit()
     db.close()
-    print("ClientFlow AI demo database seeded successfully!")
+    print("Database seeded with exactly 5 sets of Projects, Clients, Developers, Tasks, Files, and Approvals!")
 
 if __name__ == "__main__":
     seed_database()

@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import {
   Plus, CheckSquare, Clock, ArrowRight, ArrowLeft, Trash2,
-  Bookmark, AlertOctagon, CheckCircle2, Zap, Filter, Search, User as UserIcon
+  Bookmark, AlertOctagon, CheckCircle2, Zap, Filter, Search, User as UserIcon, Sparkles
 } from 'lucide-react';
-import { tasksApi, projectsApi, authApi } from '../services/api';
+import { tasksApi, projectsApi, authApi, aiApi } from '../services/api';
 import { Task, Project, TaskStatus, TaskPriority, IssueType, User } from '../types';
 import { useAuth } from '../context/AuthContext';
 
@@ -35,9 +35,11 @@ export const KanbanPage: React.FC<KanbanPageProps> = ({ projectId }) => {
 
   useEffect(() => {
     const init = async () => {
-      const pList = await projectsApi.list();
+      const [pList, uList] = await Promise.all([
+        projectsApi.list(),
+        authApi.getOrgUsers(),
+      ]);
       setProjects(pList);
-      const uList = await authApi.getOrgUsers();
       setOrgUsers(uList);
 
       if (pList.length > 0 && !selectedProjectId) {
@@ -264,8 +266,27 @@ export const KanbanPage: React.FC<KanbanPageProps> = ({ projectId }) => {
                           </span>
                         </div>
 
-                        <div className="w-6 h-6 rounded-full bg-indigo-600 text-white font-bold text-[10px] flex items-center justify-center shadow-xs" title={`Assignee: ${t.assignee?.name || 'Aarav Sharma'}`}>
-                          {t.assignee?.name ? t.assignee.name[0].toUpperCase() : <UserIcon className="w-3 h-3" />}
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            onClick={async () => {
+                              if (!selectedProjectId) return;
+                              const res = await aiApi.suggestAssignee(selectedProjectId, t.title, t.description);
+                              const top = res.recommendations[0];
+                              if (top) {
+                                await tasksApi.update(t.id, { assignee_id: top.user_id });
+                                alert(`✓ AI matched & assigned task '${t.title}' to ${top.user_name} (${top.match_score}% Match)!`);
+                                loadTasks(selectedProjectId);
+                              }
+                            }}
+                            className="p-1 text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/40 rounded-lg transition-all cursor-pointer flex items-center gap-0.5 font-extrabold text-[9px]"
+                            title="AI Smart Auto-Assign best developer"
+                          >
+                            <Sparkles className="w-3 h-3 text-amber-500" /> AI Assign
+                          </button>
+
+                          <div className="w-6 h-6 rounded-full bg-indigo-600 text-white font-bold text-[10px] flex items-center justify-center shadow-xs" title={`Assignee: ${t.assignee?.name || 'Aarav Sharma'}`}>
+                            {t.assignee?.name ? t.assignee.name[0].toUpperCase() : <UserIcon className="w-3 h-3" />}
+                          </div>
                         </div>
                       </div>
 

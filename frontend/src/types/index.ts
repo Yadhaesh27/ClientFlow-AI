@@ -206,3 +206,43 @@ export interface ProjectReport {
   recent_activity: ActivityLog[];
   completion_summary: string;
 }
+
+export interface AIScopeCreep {
+  is_scope_creep: boolean;
+  confidence_score: number;
+  category: 'ADDITIONAL_FEATURE' | 'MAJOR_REVISION' | 'IN_SCOPE_REVISION' | 'OUT_OF_BOUNDS';
+  estimated_extra_hours: number;
+  estimated_cost_impact: number;
+  analysis_reason: string;
+  recommended_action: string;
+}
+
+export interface AIDraftUpdate {
+  tone: 'EXECUTIVE' | 'FRIENDLY' | 'URGENT';
+  subject: string;
+  body: string;
+}
+
+export interface AssigneeRecommendation {
+  user_id: string;
+  user_name: string;
+  role: string;
+  match_score: number;
+  current_workload_pct: number;
+  skill_match: string[];
+  recommendation_reason: string;
+}
+
+export interface AISmartAssign {
+  task_title: string;
+  recommended_assignee_id: string;
+  recommendations: AssigneeRecommendation[];
+}
+
+export interface AISentiment {
+  sentiment_score: number;
+  sentiment_label: 'POSITIVE' | 'NEUTRAL' | 'FRUSTRATED';
+  friction_points: string[];
+  client_response_lag_hours: number;
+  suggested_retention_action: string;
+}

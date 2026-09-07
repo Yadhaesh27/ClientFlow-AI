@@ -26,23 +26,45 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
 
   if (!isOpen) return null;
 
-  const mockResults = [
-    { type: 'project', title: 'E-Commerce Platform Overhaul', sub: 'Northstar Labs • WEB', link: '/projects' },
-    { type: 'project', title: 'Mobile Banking UI Application', sub: 'Vertex Studio • MOB', link: '/projects' },
-    { type: 'client', title: 'Northstar Labs', sub: 'David Vance • 12 Active Workspaces', link: '/clients' },
-    { type: 'client', title: 'Vertex Studio', sub: 'Elena Rostova • 8 Active Workspaces', link: '/clients' },
-    { type: 'task', title: 'Implement hero section responsive layout', sub: 'WEB-101 • Done', link: '/kanban' },
-    { type: 'task', title: 'Fix mobile line wrapping on Safari', sub: 'WEB-104 • To Do', link: '/kanban' },
-    { type: 'file', title: 'Homepage_Design_v4.png', sub: 'Deliverables • 2.4 MB', link: '/files' },
-  ];
+  const [results, setResults] = useState<{ type: string; title: string; sub: string; link: string }[]>([]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const fetchSearchItems = async () => {
+      try {
+        const { projectsApi, tasksApi } = await import('../services/api');
+        const projList = await projectsApi.list();
+        const taskList = await tasksApi.list();
+
+        const projItems = projList.map(p => ({
+          type: 'project',
+          title: p.name,
+          sub: `Status: ${p.status} • Health: ${p.health_score || 90}/100`,
+          link: '/projects'
+        }));
+
+        const taskItems = taskList.map(t => ({
+          type: 'task',
+          title: t.title,
+          sub: `Priority: ${t.priority} • Status: ${t.status}`,
+          link: '/kanban'
+        }));
+
+        setResults([...projItems, ...taskItems]);
+      } catch {
+        setResults([]);
+      }
+    };
+    fetchSearchItems();
+  }, [isOpen]);
 
   const filtered = query.trim()
-    ? mockResults.filter(
+    ? results.filter(
         (r) =>
           r.title.toLowerCase().includes(query.toLowerCase()) ||
           r.sub.toLowerCase().includes(query.toLowerCase())
       )
-    : mockResults.slice(0, 5);
+    : results.slice(0, 5);
 
   const getIcon = (type: string) => {
     switch (type) {

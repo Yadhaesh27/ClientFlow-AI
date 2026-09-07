@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MessageSquare, Send, User as UserIcon } from 'lucide-react';
-import { messagesApi, projectsApi } from '../services/api';
+import { messagesApi, projectsApi, aiApi } from '../services/api';
 import { Message, Project } from '../types';
 import { useAuth } from '../context/AuthContext';
 
@@ -131,17 +131,29 @@ export const MessagesPage: React.FC<MessagesPageProps> = ({ projectId }) => {
       </div>
 
       {/* Input Bar */}
-      <form onSubmit={handleSend} className="flex gap-3 shrink-0">
+      <form onSubmit={handleSend} className="flex gap-2 shrink-0">
         <input
           type="text"
           value={inputMsg}
           onChange={(e) => setInputMsg(e.target.value)}
           placeholder="Type your message or project question..."
-          className="flex-1 px-4 py-3 glass-input rounded-2xl text-xs text-slate-900 font-medium focus:outline-none"
+          className="flex-1 px-4 py-3 glass-input rounded-2xl text-xs text-slate-900 dark:text-white font-medium focus:outline-none bg-white dark:bg-slate-800"
         />
         <button
+          type="button"
+          onClick={async () => {
+            if (!selectedProjectId) return;
+            const draft = await aiApi.draftUpdate(selectedProjectId, 'FRIENDLY');
+            setInputMsg(draft.body.split('\n\n')[1] || draft.body);
+          }}
+          className="px-3.5 py-3 bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-300 dark:border-amber-700/60 rounded-2xl text-xs font-extrabold transition-all flex items-center gap-1 shrink-0 cursor-pointer"
+          title="Auto-draft friendly response using AI"
+        >
+          ✨ AI Reply Draft
+        </button>
+        <button
           type="submit"
-          className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-sky-600 hover:from-indigo-500 hover:to-sky-500 text-white rounded-2xl text-xs font-extrabold shadow-md shadow-indigo-500/20 transition-all flex items-center gap-1.5 shrink-0"
+          className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-sky-600 hover:from-indigo-500 hover:to-sky-500 text-white rounded-2xl text-xs font-extrabold shadow-md shadow-indigo-500/20 transition-all flex items-center gap-1.5 shrink-0 cursor-pointer"
         >
           <Send className="w-4 h-4" /> Send
         </button>

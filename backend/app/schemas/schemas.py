@@ -303,6 +303,52 @@ class AIRiskResponse(BaseModel):
     reasons: List[str]
     recommended_actions: List[str]
 
+class AIScopeCreepRequest(BaseModel):
+    feedback_text: str
+
+class AIScopeCreepResponse(BaseModel):
+    is_scope_creep: bool
+    confidence_score: int
+    category: str
+    estimated_extra_hours: int
+    estimated_cost_impact: float
+    analysis_reason: str
+    recommended_action: str
+
+class AIDraftUpdateRequest(BaseModel):
+    tone: Optional[str] = "EXECUTIVE"  # EXECUTIVE, FRIENDLY, URGENT
+
+class AIDraftUpdateResponse(BaseModel):
+    tone: str
+    subject: str
+    body: str
+
+class AISmartAssignRequest(BaseModel):
+    task_title: str
+    task_description: Optional[str] = None
+    required_skills: Optional[List[str]] = []
+
+class AssigneeRecommendation(BaseModel):
+    user_id: str
+    user_name: str
+    role: str
+    match_score: int
+    current_workload_pct: int
+    skill_match: List[str]
+    recommendation_reason: str
+
+class AISmartAssignResponse(BaseModel):
+    task_title: str
+    recommended_assignee_id: str
+    recommendations: List[AssigneeRecommendation]
+
+class AISentimentResponse(BaseModel):
+    sentiment_score: int
+    sentiment_label: str  # POSITIVE, NEUTRAL, FRUSTRATED
+    friction_points: List[str]
+    client_response_lag_hours: int
+    suggested_retention_action: str
+
 class ProjectReportResponse(BaseModel):
     project: ProjectResponse
     task_stats: dict

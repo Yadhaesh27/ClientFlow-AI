@@ -3,6 +3,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { Navbar } from './components/Navbar';
 import { Sidebar } from './components/Sidebar';
 import { GlobalSearchModal } from './components/GlobalSearchModal';
+import { AiCopilotWidget } from './components/AiCopilotWidget';
 import { LoginPage } from './pages/LoginPage';
 import { ClientDashboard } from './pages/ClientDashboard';
 import { DashboardPage } from './pages/DashboardPage';
@@ -96,6 +97,7 @@ const MainAppContent: React.FC = () => {
       </div>
 
       <GlobalSearchModal isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
+      <AiCopilotWidget />
     </div>
   );
 };

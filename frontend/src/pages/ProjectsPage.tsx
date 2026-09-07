@@ -250,7 +250,7 @@ export const ProjectsPage: React.FC<ProjectsPageProps> = ({ onSelectProject }) =
               <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 border-t border-slate-100 dark:border-slate-800 pt-3">
                 <span className="flex items-center gap-1 font-normal">
                   <Building className="w-3.5 h-3.5 text-indigo-500" />
-                  Client: <span className="font-bold text-slate-800 dark:text-slate-200">{proj.client_user_id ? 'Northstar Labs (David Vance)' : 'Vertex Studio'}</span>
+                  Client: <span className="font-bold text-slate-800 dark:text-slate-200">{proj.client_user_id ? `Client (${proj.client_user_id.slice(0,8)})` : 'Unassigned'}</span>
                 </span>
 
                 <button

@@ -2,7 +2,8 @@ import axios from 'axios';
 import {
   User, Project, Task, ProjectFile, Approval, Message,
   Notification, ActivityLog, ProjectHealthDetail, AISummary,
-  ExtractedTask, ProjectReport
+  ExtractedTask, ProjectReport, AIScopeCreep, AIDraftUpdate,
+  AISmartAssign, AISentiment
 } from '../types';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
@@ -85,329 +86,121 @@ const DEMO_USERS: Record<string, User> = {
 const INITIAL_PROJECTS: Project[] = [
   {
     id: 'proj_1',
-    name: 'E-Commerce Platform Overhaul',
-    description: 'Next.js storefront redesign with FastAPI backend and Stripe checkout.',
     organization_id: 'org_novaworks',
+    client_user_id: 'usr_client_1',
+    name: 'NextGen AI E-Commerce Platform',
+    key_prefix: 'ECOMM',
+    description: 'High-throughput e-commerce platform with Gemini AI dynamic product recommendations and streaming search.',
     status: 'ACTIVE',
-    progress: 78,
-    health_score: 87,
-    budget: 85000,
-    deadline: '2026-10-15',
+    progress: 85,
+    health_score: 92,
+    budget: 120000,
+    deadline: '2026-11-30',
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   },
   {
     id: 'proj_2',
-    name: 'Mobile Banking UI Application',
-    description: 'iOS and Android financial wallet app with secure biometrics.',
     organization_id: 'org_novaworks',
+    client_user_id: 'usr_client_3',
+    name: 'Mobile Banking & Wealth App',
+    key_prefix: 'BANK',
+    description: 'Biometric mobile banking portal featuring encrypted microservice API integration.',
     status: 'ACTIVE',
-    progress: 92,
-    health_score: 94,
-    budget: 120000,
-    deadline: '2026-09-30',
+    progress: 60,
+    health_score: 88,
+    budget: 185000,
+    deadline: '2026-12-15',
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   },
   {
     id: 'proj_3',
-    name: 'AI HealthTech Diagnostic Portal',
-    description: 'HIPAA-compliant diagnostic dashboard powered by Gemini vision models.',
     organization_id: 'org_novaworks',
+    client_user_id: 'usr_client_4',
+    name: 'Cloud Media Streaming Portal',
+    key_prefix: 'STREAM',
+    description: 'Low-latency streaming video delivery network with real-time video transcoding.',
     status: 'ACTIVE',
-    progress: 64,
-    health_score: 91,
-    budget: 150000,
-    deadline: '2026-11-20',
+    progress: 40,
+    health_score: 75,
+    budget: 95000,
+    deadline: '2026-10-20',
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   },
   {
     id: 'proj_4',
-    name: 'SaaS Analytics Dashboard v3',
-    description: 'Real-time telemetry and revenue cohort analytics suite.',
     organization_id: 'org_novaworks',
+    client_user_id: 'usr_client_5',
+    name: 'Telehealth Patient Care Dashboard',
+    key_prefix: 'HEALTH',
+    description: 'HIPAA-compliant doctor consultation dashboard and patient record synchronization.',
     status: 'ACTIVE',
-    progress: 45,
-    health_score: 82,
-    budget: 65000,
-    deadline: '2026-12-05',
+    progress: 95,
+    health_score: 96,
+    budget: 140000,
+    deadline: '2026-09-30',
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   },
   {
     id: 'proj_5',
-    name: 'Crypto & Web3 Wallet Extension',
-    description: 'Browser extension wallet for multi-chain token swaps & dApps.',
     organization_id: 'org_novaworks',
+    client_user_id: 'usr_client_2',
+    name: 'Brand Design & Interactive UI Suite',
+    key_prefix: 'BRAND',
+    description: 'Complete brand guidelines, dark mode design tokens, and vector icon suite.',
     status: 'ACTIVE',
-    progress: 30,
-    health_score: 76,
-    budget: 95000,
-    deadline: '2027-01-15',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: 'proj_6',
-    name: 'Logistics & Supply Chain Tracker',
-    description: 'Fleet GPS mapping, IoT sensor tracking, and automated dispatching.',
-    organization_id: 'org_novaworks',
-    status: 'ACTIVE',
-    progress: 85,
-    health_score: 88,
-    budget: 110000,
-    deadline: '2026-10-01',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: 'proj_7',
-    name: 'HR Cloud Payroll Automation',
-    description: 'Automated tax withholding, direct deposit, and compliance reporting.',
-    organization_id: 'org_novaworks',
-    status: 'COMPLETED',
-    progress: 100,
-    health_score: 96,
-    budget: 70000,
-    deadline: '2026-08-30',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: 'proj_8',
-    name: 'Real Estate CRM & Property Portal',
-    description: 'MLS listing sync, Virtual 3D tours, and lead routing for brokers.',
-    organization_id: 'org_novaworks',
-    status: 'ACTIVE',
-    progress: 70,
-    health_score: 89,
-    budget: 90000,
-    deadline: '2026-11-10',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: 'proj_9',
-    name: 'Automated Microservice Test Suite',
-    description: 'CI/CD pipeline integration with Playwright and Cypress runner.',
-    organization_id: 'org_novaworks',
-    status: 'ACTIVE',
-    progress: 52,
-    health_score: 84,
-    budget: 55000,
-    deadline: '2026-12-18',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: 'proj_10',
-    name: 'Smart Energy & Grid IoT Dashboard',
-    description: 'Solar grid telemetry monitoring, battery health, and peak load prediction.',
-    organization_id: 'org_novaworks',
-    status: 'ACTIVE',
-    progress: 40,
-    health_score: 93,
-    budget: 135000,
-    deadline: '2027-02-01',
+    progress: 25,
+    health_score: 82,
+    budget: 65000,
+    deadline: '2026-12-01',
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   },
 ];
 
-// Seed Dynamic Tasks matching Task interface
+// Seed Dynamic Tasks matching Task interface (5 tasks per project)
 const INITIAL_TASKS: Task[] = [
-  {
-    id: 'task_1',
-    project_id: 'proj_1',
-    created_by: 'usr_pm',
-    title: 'Implement responsive hero banner & CTA buttons',
-    description: 'Ensure banner aligns properly across mobile and tablet viewports.',
-    status: 'DONE',
-    priority: 'HIGH',
-    issue_type: 'STORY',
-    story_points: 5,
-    assignee_id: 'usr_dev',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: 'task_2',
-    project_id: 'proj_1',
-    created_by: 'usr_pm',
-    title: 'Integrate Gemini AI summary API endpoint',
-    description: 'Parse project status notes into executive summaries.',
-    status: 'IN_PROGRESS',
-    priority: 'URGENT',
-    issue_type: 'TASK',
-    story_points: 8,
-    assignee_id: 'usr_pm',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: 'task_3',
-    project_id: 'proj_1',
-    created_by: 'usr_pm',
-    title: 'Fix line wrapping issue on Safari browser',
-    description: 'Adjust flex container padding and overflow values.',
-    status: 'TO_DO',
-    priority: 'MEDIUM',
-    issue_type: 'BUG',
-    story_points: 3,
-    assignee_id: 'usr_dev',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: 'task_4',
-    project_id: 'proj_1',
-    created_by: 'usr_admin',
-    title: 'Setup PostgreSQL database migrations & seeds',
-    description: 'Configure Alembic migration scripts for multi-tenant schema.',
-    status: 'DONE',
-    priority: 'HIGH',
-    issue_type: 'TASK',
-    story_points: 5,
-    assignee_id: 'usr_admin',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: 'task_5',
-    project_id: 'proj_1',
-    created_by: 'usr_pm',
-    title: 'Client Action Center v2 review queue',
-    description: 'Build deliverable file version approval component.',
-    status: 'REVIEW',
-    priority: 'URGENT',
-    issue_type: 'STORY',
-    story_points: 8,
-    assignee_id: 'usr_dev',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: 'task_6',
-    project_id: 'proj_2',
-    created_by: 'usr_pm',
-    title: 'Biometric FaceID authentication setup',
-    description: 'Integrate native iOS local authentication API.',
-    status: 'IN_PROGRESS',
-    priority: 'HIGH',
-    issue_type: 'STORY',
-    story_points: 5,
-    assignee_id: 'usr_dev',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: 'task_7',
-    project_id: 'proj_2',
-    created_by: 'usr_admin',
-    title: 'Stripe Payment Gateway Webhooks',
-    description: 'Handle recurring subscription webhooks for client billing.',
-    status: 'BACKLOG',
-    priority: 'MEDIUM',
-    issue_type: 'EPIC',
-    story_points: 13,
-    assignee_id: 'usr_pm',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: 'task_8',
-    project_id: 'proj_2',
-    created_by: 'usr_pm',
-    title: 'Security audit & vulnerability scanning',
-    description: 'Run automated OWASP vulnerability scan on API routes.',
-    status: 'DONE',
-    priority: 'HIGH',
-    issue_type: 'TASK',
-    story_points: 3,
-    assignee_id: 'usr_admin',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: 'task_9',
-    project_id: 'proj_3',
-    created_by: 'usr_admin',
-    title: 'HIPAA Cloud Storage CMEK Encryption',
-    description: 'Configure customer managed encryption keys for patient diagnostics.',
-    status: 'IN_PROGRESS',
-    priority: 'URGENT',
-    issue_type: 'STORY',
-    story_points: 8,
-    assignee_id: 'usr_dev',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: 'task_10',
-    project_id: 'proj_4',
-    created_by: 'usr_pm',
-    title: 'Real-time telemetry WebSocket pipeline',
-    description: 'Stream live user metrics to cohort analytics dashboard.',
-    status: 'TO_DO',
-    priority: 'HIGH',
-    issue_type: 'FEATURE',
-    story_points: 5,
-    assignee_id: 'usr_pm',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: 'task_11',
-    project_id: 'proj_6',
-    created_by: 'usr_pm',
-    title: 'Fleet GPS Geofencing trigger alerts',
-    description: 'Automate push notifications when delivery vehicles enter warehouse radius.',
-    status: 'REVIEW',
-    priority: 'MEDIUM',
-    issue_type: 'STORY',
-    story_points: 5,
-    assignee_id: 'usr_dev',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
-  {
-    id: 'task_12',
-    project_id: 'proj_8',
-    created_by: 'usr_admin',
-    title: 'Virtual 3D Matterport Tour Embedding',
-    description: 'Embed WebGL 3D property walkthrough viewer inside property detail pages.',
-    status: 'TO_DO',
-    priority: 'MEDIUM',
-    issue_type: 'FEATURE',
-    story_points: 8,
-    assignee_id: 'usr_dev',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  },
+  // Project 1 Tasks
+  { id: 'task_1', project_id: 'proj_1', issue_key: 'ECOMM-101', title: 'Implement Gemini AI product recommendation API', description: 'Integrate real-time embeddings for similar product drawer', status: 'IN_PROGRESS', priority: 'HIGH', issue_type: 'STORY', story_points: 5, assignee_id: 'usr_dev_1', created_by: 'usr_pm', due_date: '2026-10-15', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'task_2', project_id: 'proj_1', issue_key: 'ECOMM-102', title: 'Fix mobile checkout button overlap', description: 'Adjust sticky bottom container on Safari iOS', status: 'REVIEW', priority: 'URGENT', issue_type: 'BUG', story_points: 3, assignee_id: 'usr_dev_2', created_by: 'usr_pm', due_date: '2026-10-10', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'task_3', project_id: 'proj_1', issue_key: 'ECOMM-103', title: 'Stripe Payment Gateway webhook handler', description: 'Setup webhook signature verification and idempotency keys', status: 'DONE', priority: 'HIGH', issue_type: 'STORY', story_points: 8, assignee_id: 'usr_dev_3', created_by: 'usr_pm', due_date: '2026-09-28', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'task_4', project_id: 'proj_1', issue_key: 'ECOMM-104', title: 'Add Redis cache layer for product catalog', description: 'Cache top 1000 inventory items with 15min TTL', status: 'TO_DO', priority: 'MEDIUM', issue_type: 'TASK', story_points: 3, assignee_id: 'usr_dev_3', created_by: 'usr_pm', due_date: '2026-11-01', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'task_5', project_id: 'proj_1', issue_key: 'ECOMM-105', title: 'Audit accessibility compliance (WCAG 2.1 AA)', description: 'Ensure screen reader ARIA labels on modal dialogs', status: 'BACKLOG', priority: 'LOW', issue_type: 'TASK', story_points: 2, assignee_id: 'usr_dev_2', created_by: 'usr_pm', due_date: '2026-11-15', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+
+  // Project 2 Tasks
+  { id: 'task_6', project_id: 'proj_2', issue_key: 'BANK-101', title: 'Implement Biometric WebAuthn authentication', description: 'Enable fingerprint and FaceID sign-in flow', status: 'IN_PROGRESS', priority: 'URGENT', issue_type: 'STORY', story_points: 8, assignee_id: 'usr_dev_1', created_by: 'usr_pm', due_date: '2026-10-20', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'task_7', project_id: 'proj_2', issue_key: 'BANK-102', title: 'Encrypt transaction payload with AES-256', description: 'Add payload level encryption for wire transfers', status: 'DONE', priority: 'HIGH', issue_type: 'TASK', story_points: 5, assignee_id: 'usr_dev_3', created_by: 'usr_pm', due_date: '2026-09-30', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'task_8', project_id: 'proj_2', issue_key: 'BANK-103', title: 'Fix currency formatting decimal bug', description: 'Format JPY and EUR currencies according to locale', status: 'REVIEW', priority: 'MEDIUM', issue_type: 'BUG', story_points: 2, assignee_id: 'usr_dev_2', created_by: 'usr_pm', due_date: '2026-10-05', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'task_9', project_id: 'proj_2', issue_key: 'BANK-104', title: 'Design investment portfolio performance graph', description: 'Interactive area chart for historical stock yields', status: 'TO_DO', priority: 'HIGH', issue_type: 'STORY', story_points: 5, assignee_id: 'usr_dev_2', created_by: 'usr_pm', due_date: '2026-11-10', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'task_10', project_id: 'proj_2', issue_key: 'BANK-105', title: 'Automated SMS push notification service', description: 'Trigger SMS alerts on debit transactions exceeding $500', status: 'BACKLOG', priority: 'LOW', issue_type: 'TASK', story_points: 3, assignee_id: 'usr_dev_3', created_by: 'usr_pm', due_date: '2026-11-25', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+
+  // Project 3 Tasks
+  { id: 'task_11', project_id: 'proj_3', issue_key: 'STREAM-101', title: 'HLS Video player adaptive bitrate switching', description: 'Smoothly toggle 1080p, 720p, 480p streams based on network speed', status: 'IN_PROGRESS', priority: 'HIGH', issue_type: 'STORY', story_points: 5, assignee_id: 'usr_dev_2', created_by: 'usr_pm', due_date: '2026-10-12', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'task_12', project_id: 'proj_3', issue_key: 'STREAM-102', title: 'Transcoding pipeline microservice setup', description: 'Deploy FFmpeg container on GCP Cloud Run', status: 'TO_DO', priority: 'URGENT', issue_type: 'TASK', story_points: 8, assignee_id: 'usr_dev_3', created_by: 'usr_pm', due_date: '2026-10-18', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'task_13', project_id: 'proj_3', issue_key: 'STREAM-103', title: 'Fix audio sync drift on Safari HLS player', description: 'Prevent audio/video desync after seeking forward', status: 'REVIEW', priority: 'HIGH', issue_type: 'BUG', story_points: 3, assignee_id: 'usr_dev_1', created_by: 'usr_pm', due_date: '2026-10-08', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'task_14', project_id: 'proj_3', issue_key: 'STREAM-104', title: 'Subtitles and Closed Captioning VTT parser', description: 'Support multi-language SRT and VTT files', status: 'DONE', priority: 'MEDIUM', issue_type: 'STORY', story_points: 3, assignee_id: 'usr_dev_2', created_by: 'usr_pm', due_date: '2026-09-25', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'task_15', project_id: 'proj_3', issue_key: 'STREAM-105', title: 'User watch history & continue watching API', description: 'Persist timestamp progress every 5 seconds', status: 'BACKLOG', priority: 'LOW', issue_type: 'TASK', story_points: 3, assignee_id: 'usr_dev_1', created_by: 'usr_pm', due_date: '2026-11-05', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+
+  // Project 4 Tasks
+  { id: 'task_16', project_id: 'proj_4', issue_key: 'HEALTH-101', title: 'HIPAA-compliant WebRTC video consultation room', description: 'Peer-to-peer encrypted medical video call pipeline', status: 'DONE', priority: 'URGENT', issue_type: 'STORY', story_points: 8, assignee_id: 'usr_dev_1', created_by: 'usr_pm', due_date: '2026-09-20', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'task_17', project_id: 'proj_4', issue_key: 'HEALTH-102', title: 'E-Prescription PDF generator & digital sign', description: 'Generate signed medical prescription documents for pharmacy', status: 'DONE', priority: 'HIGH', issue_type: 'TASK', story_points: 5, assignee_id: 'usr_dev_3', created_by: 'usr_pm', due_date: '2026-09-25', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'task_18', project_id: 'proj_4', issue_key: 'HEALTH-103', title: 'Doctor schedule calendar booking sync', description: 'Sync appointment slots with Google Calendar and Outlook', status: 'IN_PROGRESS', priority: 'HIGH', issue_type: 'STORY', story_points: 5, assignee_id: 'usr_dev_2', created_by: 'usr_pm', due_date: '2026-10-02', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'task_19', project_id: 'proj_4', issue_key: 'HEALTH-104', title: 'Fix vital signs chart tooltips on mobile', description: 'Improve heart rate & blood pressure graph readability', status: 'REVIEW', priority: 'MEDIUM', issue_type: 'BUG', story_points: 2, assignee_id: 'usr_dev_2', created_by: 'usr_pm', due_date: '2026-09-29', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'task_20', project_id: 'proj_4', issue_key: 'HEALTH-105', title: 'Patient medical history audit log export', description: 'Export access log records for compliance verification', status: 'DONE', priority: 'MEDIUM', issue_type: 'TASK', story_points: 3, assignee_id: 'usr_dev_3', created_by: 'usr_pm', due_date: '2026-09-15', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+
+  // Project 5 Tasks
+  { id: 'task_21', project_id: 'proj_5', issue_key: 'BRAND-101', title: 'Dark mode design token color palette system', description: 'Generate CSS custom properties for primary, surface, and semantic colors', status: 'IN_PROGRESS', priority: 'HIGH', issue_type: 'STORY', story_points: 3, assignee_id: 'usr_dev_2', created_by: 'usr_pm', due_date: '2026-10-25', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'task_22', project_id: 'proj_5', issue_key: 'BRAND-102', title: 'Vector icon set SVG export & React component library', description: 'Package 120 custom UI icons into NPM component package', status: 'TO_DO', priority: 'MEDIUM', issue_type: 'TASK', story_points: 5, assignee_id: 'usr_dev_2', created_by: 'usr_pm', due_date: '2026-11-05', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'task_23', project_id: 'proj_5', issue_key: 'BRAND-103', title: 'Brand typography stylesheet & Google Fonts integration', description: 'Setup Inter & Outfit variable font loading specs', status: 'DONE', priority: 'LOW', issue_type: 'TASK', story_points: 2, assignee_id: 'usr_dev_1', created_by: 'usr_pm', due_date: '2026-09-18', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'task_24', project_id: 'proj_5', issue_key: 'BRAND-104', title: 'Interactive Storybook UI component showcase', description: 'Deploy Storybook documentation site on Vercel', status: 'TO_DO', priority: 'MEDIUM', issue_type: 'STORY', story_points: 5, assignee_id: 'usr_dev_3', created_by: 'usr_pm', due_date: '2026-11-20', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
+  { id: 'task_25', project_id: 'proj_5', issue_key: 'BRAND-105', title: 'Fix logo SVG clipping path on Safari browsers', description: 'Ensure viewBox bounds render without cropped edges', status: 'REVIEW', priority: 'HIGH', issue_type: 'BUG', story_points: 2, assignee_id: 'usr_dev_2', created_by: 'usr_pm', due_date: '2026-10-15', created_at: new Date().toISOString(), updated_at: new Date().toISOString() },
 ];
 
 // Seed Dynamic Notifications matching Notification interface
-const INITIAL_NOTIFS: Notification[] = [
-  {
-    id: 'notif_1',
-    user_id: 'usr_admin',
-    type: 'APPROVAL',
-    title: 'Deliverable Approved',
-    message: 'David Vance approved Homepage_Design_v2.png deliverable.',
-    is_read: false,
-    created_at: new Date().toISOString(),
-  },
-  {
-    id: 'notif_2',
-    user_id: 'usr_admin',
-    type: 'TASK_ASSIGNED',
-    title: 'Task Assigned',
-    message: 'Alex Rivera assigned you task "Integrate Gemini AI summary API".',
-    is_read: false,
-    created_at: new Date().toISOString(),
-  },
-];
+const INITIAL_NOTIFS: Notification[] = [];
 
 // Local Storage Helper Store for Offline Dynamic State Persistence
 const getLocalData = <T>(key: string, initial: T): T => {
@@ -660,21 +453,7 @@ export const filesApi = {
     });
     if (data) return data;
 
-    return [
-      {
-        id: 'file_1',
-        project_id: projectId,
-        uploaded_by: 'usr_dev',
-        folder: 'Deliverables',
-        filename: 'Homepage_Design_v2.png',
-        storage_url: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=800',
-        mime_type: 'image/png',
-        size_bytes: 2450000,
-        current_version: 2,
-        approval_status: 'PENDING',
-        created_at: new Date().toISOString(),
-      },
-    ];
+    return [];
   },
   upload: async (projectId: string, formData: FormData): Promise<ProjectFile> => {
     const data = await tryApiCall(async () => {
@@ -724,34 +503,7 @@ export const filesApi = {
   },
 };
 
-const INITIAL_APPROVALS: Approval[] = [
-  {
-    id: 'app_1',
-    project_id: 'proj_1',
-    file_id: 'file_1',
-    title: 'Approve Homepage Design Wireframe v2',
-    description: 'Please review the updated hero palette and responsive layout.',
-    status: 'PENDING',
-    requested_by_name: 'Aarav Sharma (Developer)',
-    requested_by_role: 'TEAM_MEMBER',
-    target_recipient: 'CLIENT',
-    requested_from_user_id: 'usr_client',
-    created_at: new Date().toISOString(),
-  },
-  {
-    id: 'app_2',
-    project_id: 'proj_1',
-    file_id: 'file_1',
-    title: 'Backend API Security & Token Refresh Verification',
-    description: 'Developer requested code verification for JWT token rotation mechanism.',
-    status: 'PENDING',
-    requested_by_name: 'Aarav Sharma (Developer)',
-    requested_by_role: 'TEAM_MEMBER',
-    target_recipient: 'EVERYONE',
-    requested_from_user_id: 'usr_admin',
-    created_at: new Date(Date.now() - 3600000).toISOString(),
-  },
-];
+const INITIAL_APPROVALS: Approval[] = [];
 
 export const approvalsApi = {
   list: async (projectId: string): Promise<Approval[]> => {
@@ -780,7 +532,7 @@ export const approvalsApi = {
       description: data.description || '',
       status: 'PENDING',
       requested_by_user_id: data.requested_by_user_id || 'usr_dev',
-      requested_by_name: data.requested_by_name || 'Aarav Sharma (Developer)',
+      requested_by_name: data.requested_by_name || 'Developer',
       requested_by_role: data.requested_by_role || 'TEAM_MEMBER',
       target_recipient: data.target_recipient || 'EVERYONE',
       requested_from_user_id: data.requested_from_user_id || 'usr_client',
@@ -852,16 +604,8 @@ export const messagesApi = {
     });
     if (data) return data;
 
-    const allMsg = getLocalData('clientflow_messages', [
-      {
-        id: 'msg_1',
-        project_id: projectId,
-        sender_id: 'usr_client',
-        message: 'The new hero wireframe looks great! Could we adjust the primary button color?',
-        created_at: new Date().toISOString(),
-      },
-    ]);
-    return allMsg;
+    const allMsg = getLocalData<Message[]>('clientflow_messages', []);
+    return allMsg.filter(m => m.project_id === projectId);
   },
   send: async (projectId: string, message: string, attachment_url?: string): Promise<Message> => {
     const resData = await tryApiCall(async () => {
@@ -926,18 +670,7 @@ export const notificationsApi = {
     });
     if (data) return data;
 
-    return [
-      {
-        id: 'act_1',
-        organization_id: 'org_novaworks',
-        project_id: projectId,
-        user_id: 'usr_admin',
-        action: 'Created task "Fix hero line wrapping"',
-        entity_type: 'TASK',
-        entity_id: 'task_3',
-        created_at: new Date().toISOString(),
-      },
-    ];
+    return [];
   },
 };
 
@@ -1002,6 +735,171 @@ export const aiApi = {
 
     return {
       response: `Based on your live workspace data for project "${projectId}", 3 tasks are currently in progress and 1 deliverable is awaiting client review.`,
+    };
+  },
+  streamChat: async (projectId: string, message: string, onChunk: (chunk: string) => void) => {
+    try {
+      const token = localStorage.getItem('clientflow_token');
+      const response = await fetch(`${API_BASE}/api/ai/projects/${projectId}/chat/stream`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ message }),
+      });
+
+      if (!response.ok || !response.body) throw new Error('Stream request failed');
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+
+        const lines = buffer.split('\n\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const rawJson = line.slice(6);
+            try {
+              const parsed = JSON.parse(rawJson);
+              if (parsed.text) {
+                onChunk(parsed.text);
+              }
+            } catch (e) {
+              console.error(e);
+            }
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('Realtime streaming fallback triggered.');
+      const msgLower = message.toLowerCase();
+      let fallbackText = '';
+      if (msgLower.includes('hi') || msgLower.includes('hello') || msgLower.includes('help')) {
+        fallbackText = `Hello! I am your ClientFlow AI Copilot. Ask me about tasks, deadlines, team workload, or draft reports!`;
+      } else if (msgLower.includes('health') || msgLower.includes('score')) {
+        fallbackText = `Project health score is currently 87/100 (On Track). All milestones are proceeding smoothly with high task velocity.`;
+      } else if (msgLower.includes('team') || msgLower.includes('dev') || msgLower.includes('assign')) {
+        fallbackText = `Aarav Sharma (Lead Dev) has the lowest active task load (45% capacity) and is recommended for new tasks.`;
+      } else if (msgLower.includes('budget') || msgLower.includes('cost')) {
+        fallbackText = `Project budget is $245,000.00. Current sprint expenditures are tracking strictly within parameters.`;
+      } else if (msgLower.includes('draft') || msgLower.includes('email') || msgLower.includes('update')) {
+        fallbackText = `Executive Update Draft: Progress stands at 82%. Deliverable v4 has been uploaded and is pending client sign-off.`;
+      } else {
+        fallbackText = `Regarding "${message}": Progress is 82%, Health Score is 87/100, and 1 approval deliverable is awaiting client sign-off.`;
+      }
+
+      for (const word of fallbackText.split(' ')) {
+        onChunk(word + ' ');
+        await new Promise((r) => setTimeout(r, 20));
+      }
+    }
+  },
+  detectScopeCreep: async (projectId: string, feedbackText: string): Promise<AIScopeCreep> => {
+    const data = await tryApiCall(async () => {
+      const res = await api.post(`/api/ai/projects/${projectId}/scope-creep`, { feedback_text: feedbackText });
+      return res.data;
+    });
+    if (data) return data;
+
+    const isCreep = feedbackText.toLowerCase().includes('add') || feedbackText.toLowerCase().includes('new') || feedbackText.toLowerCase().includes('integration');
+    return {
+      is_scope_creep: isCreep,
+      confidence_score: isCreep ? 94 : 30,
+      category: isCreep ? 'ADDITIONAL_FEATURE' : 'IN_SCOPE_REVISION',
+      estimated_extra_hours: isCreep ? 14 : 2,
+      estimated_cost_impact: isCreep ? 1400 : 0,
+      analysis_reason: isCreep
+        ? 'Client comment requests additional functional modules outside core sprint contract bounds.'
+        : 'Requested adjustments are within standard revision allocations.',
+      recommended_action: isCreep
+        ? 'Issue Change Order for client approval & additional budget allocation.'
+        : 'Incorporate into next sprint task queue.',
+    };
+  },
+  draftUpdate: async (projectId: string, tone: 'EXECUTIVE' | 'FRIENDLY' | 'URGENT' = 'EXECUTIVE'): Promise<AIDraftUpdate> => {
+    const data = await tryApiCall(async () => {
+      const res = await api.post(`/api/ai/projects/${projectId}/draft-update`, { tone });
+      return res.data;
+    });
+    if (data) return data;
+
+    if (tone === 'FRIENDLY') {
+      return {
+        tone: 'FRIENDLY',
+        subject: '🚀 Great progress update on your project!',
+        body: 'Hi Team!\n\nWe have made awesome strides this week! Core features are deployed and responsive viewports are verified.\n\nPlease take a quick minute to review the open deliverable in your Action Center so we can keep the momentum rolling!\n\nBest regards,\nYour ClientFlow Team',
+      };
+    } else if (tone === 'URGENT') {
+      return {
+        tone: 'URGENT',
+        subject: '⚠️ Action Required: Immediate Sign-off Needed',
+        body: 'Dear Partner,\n\nWe are currently awaiting client sign-off on open deliverable items. Progress is currently paused pending this verification.\n\nTo avoid timeline delays, please review and approve the pending deliverable today.\n\nThank you,\nClientFlow Project Manager',
+      };
+    }
+    return {
+      tone: 'EXECUTIVE',
+      subject: 'Executive Progress Report (78% Complete)',
+      body: 'Hello,\n\nPlease find the executive status report for your active project.\n\n• Progress Velocity: 78%\n• Project Health Score: 87/100 (On Track)\n• Deliverable Status: Sprint 14 assets uploaded & awaiting final sign-off.\n\nSincerely,\nClientFlow Enterprise Management',
+    };
+  },
+  suggestAssignee: async (projectId: string, taskTitle: string, taskDescription?: string): Promise<AISmartAssign> => {
+    const data = await tryApiCall(async () => {
+      const res = await api.post(`/api/ai/projects/${projectId}/suggest-assignee`, {
+        task_title: taskTitle,
+        task_description: taskDescription,
+      });
+      return res.data;
+    });
+    if (data) return data;
+
+    return {
+      task_title: taskTitle,
+      recommended_assignee_id: 'usr_dev',
+      recommendations: [
+        {
+          user_id: 'usr_dev',
+          user_name: 'Aarav Sharma',
+          role: 'Lead Frontend Developer',
+          match_score: 95,
+          current_workload_pct: 45,
+          skill_match: ['React', 'TypeScript', 'Tailwind CSS'],
+          recommendation_reason: 'Low current workload (45%) and expert proficiency in UI components.',
+        },
+        {
+          user_id: 'usr_pm',
+          user_name: 'Alex Rivera',
+          role: 'Project Manager',
+          match_score: 82,
+          current_workload_pct: 60,
+          skill_match: ['Sprint Management', 'API Specs'],
+          recommendation_reason: 'Moderate workload and owner of client scope alignment.',
+        },
+      ],
+    };
+  },
+  getSentiment: async (projectId: string): Promise<AISentiment> => {
+    const data = await tryApiCall(async () => {
+      const res = await api.post(`/api/ai/projects/${projectId}/sentiment`);
+      return res.data;
+    });
+    if (data) return data;
+
+    return {
+      sentiment_score: 88,
+      sentiment_label: 'POSITIVE',
+      friction_points: [
+        'Approval review lag of 3 days on Homepage Wireframe v2 deliverable',
+        'Minor clarification requested on mobile font sizing',
+      ],
+      client_response_lag_hours: 14,
+      suggested_retention_action: 'Send quick video preview or schedule a 5-minute sync call to answer layout questions.',
     };
   },
 };
